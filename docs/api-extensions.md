@@ -38,6 +38,7 @@ this project's extensions — they are documented in full in
   - [`HEAD /zip/{id}`](#head-zipid)
   - [`GET /user/terms`](#get-userterms)
   - [`POST /user/terms/accept`](#post-usertermsaccept)
+  - [`GET /announcements`](#get-announcements)
 - [Response shape additions](#response-shape-additions)
   - [`counts`](#counts--on-every-entity)
   - [`language`](#language--on-every-entity)
@@ -55,6 +56,7 @@ Which extensions a backend must implement depends on the frontend's
 | If `configuration.json` has…                                          | You must implement                                                              |
 |-----------------------------------------------------------------------|---------------------------------------------------------------------------------|
 | `ui.features.hasZipDownload: true`                                    | [`HEAD /zip/{id}`](#head-zipid)                                                 |
+| `ui.features.hasAnnouncements: true`                                  | [`GET /announcements`](#get-announcements)                                      |
 | `ui.login.enabled: true` **and** `ui.login.manageTermsAndConditions: true` | [`GET /user/terms`](#get-userterms), [`POST /user/terms/accept`](#post-usertermsaccept) |
 | `api.rocrate.clientId` set                                            | OIDC discovery on `api.rocrate.endpoint` — covered upstream                     |
 | *always*                                                              | The [response shape additions](#response-shape-additions) |
@@ -182,6 +184,56 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 { "accept": true }
+```
+
+### `GET /announcements`
+
+Returns the site-wide announcements (e.g. scheduled-downtime notices)
+that should currently be visible to every visitor. The backend is
+expected to filter to only currently-active rows; Oni renders whatever
+it gets back as warning banners across the top of the shell.
+
+**Gated by:** `ui.features.hasAnnouncements`
+**Called from:** [`src/views/ShellView.vue`](../src/views/ShellView.vue)
+via `ApiService.getAnnouncements()`
+([`src/services/api.ts`](../src/services/api.ts)). Fetched once on app
+boot — there is no polling, and the call is skipped entirely when the
+flag is off.
+
+**Request**
+
+| Item              | Value                                              |
+|-------------------|----------------------------------------------------|
+| Method            | `GET`                                              |
+| Path              | `/announcements`                                   |
+| `Authorization`   | `Bearer <token>` if the user is signed in (optional) |
+
+**Response** (`200 OK`)
+
+| Field                    | Type                | Description                                                             |
+|--------------------------|---------------------|-------------------------------------------------------------------------|
+| `announcements`          | `Announcement[]`    | Active announcements. May be empty. The order in which they're returned is the order in which they're rendered. |
+| `announcements[].id`     | integer             | Stable identifier — used as the Vue `:key` so banners don't re-render unnecessarily |
+| `announcements[].message`| string              | Plain-text message body. Rendered as a text node — **HTML is not interpreted** |
+
+The endpoint always returns `200` with `{ "announcements": [] }` when no
+announcement is active — there is no `204` special case. If the backend
+returns `404` (e.g. an older deployment without this endpoint), Oni
+silently treats it as "no announcements" and does not render a banner.
+
+**Example**
+
+```http
+GET /announcements HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "announcements": [
+    { "id": 42, "message": "Scheduled downtime: Sat 2026-05-16 14:00 UTC for ~30 minutes." }
+  ]
+}
 ```
 
 ## Response shape additions

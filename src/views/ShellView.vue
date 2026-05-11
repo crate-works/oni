@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, watch } from 'vue';
+import { inject, onMounted, ref, watch } from 'vue';
 
 import { RouterView } from 'vue-router';
 import FooterView from '@/components/Footer.vue';
@@ -7,7 +7,7 @@ import MaintenacePage from '@/components/MaintenacePage.vue';
 import NavView from '@/components/Nav.vue';
 import { ui } from '@/configuration';
 
-import type { ApiService, GetTermsResponse } from '@/services/api';
+import type { Announcement, ApiService, GetTermsResponse } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
@@ -19,10 +19,23 @@ if (!api) {
 
 const {
   login: { manageTermsAndConditions },
+  features: { hasAnnouncements } = {},
 } = ui;
 
 const showTerms = ref(false);
 const terms = ref<GetTermsResponse>();
+const announcements = ref<Announcement[]>([]);
+
+if (hasAnnouncements) {
+  onMounted(async () => {
+    const response = await api.getAnnouncements();
+    if ('error' in response) {
+      return;
+    }
+
+    announcements.value = response.announcements;
+  });
+}
 
 const manageTerms = async () => {
   const fetchedTerms = await api.getTerms();
@@ -73,6 +86,24 @@ if (manageTermsAndConditions) {
         </el-col>
       </el-row>
     </header>
+
+    <el-row
+      v-if="announcements.length"
+      :gutter="0"
+      :offset="0"
+      class="flex items-center justify-center"
+    >
+      <el-col :xs="24" :sm="24" :md="24" :lg="22" :xl="17" :offset="0">
+        <el-alert
+          v-for="announcement in announcements"
+          :key="announcement.id"
+          :title="announcement.message"
+          type="warning"
+          show-icon
+          class="mb-1"
+        />
+      </el-col>
+    </el-row>
 
     <el-row :gutter="0" :offset="0" style="" class="flex items-center justify-center">
       <el-col :xs="24" :sm="24" :md="24" :lg="22" :xl="17" :offset="0">

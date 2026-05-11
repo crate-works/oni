@@ -669,6 +669,7 @@ Enable or disable specific features.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `ui.features.hasZipDownload` | boolean | No | Whether to enable ZIP download functionality |
+| `ui.features.hasAnnouncements` | boolean | No | Whether to fetch and display site-wide announcements (e.g. downtime warnings) on app boot. Requires the backend to implement [`GET /announcements`](./api-extensions.md#get-announcements). |
 
 **Example:**
 
@@ -676,7 +677,8 @@ Enable or disable specific features.
 {
   "ui": {
     "features": {
-      "hasZipDownload": true
+      "hasZipDownload": true,
+      "hasAnnouncements": true
     }
   }
 }

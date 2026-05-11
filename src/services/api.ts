@@ -126,6 +126,15 @@ export type GetTermsResponse = {
   agreement: boolean;
 };
 
+export type Announcement = {
+  id: number;
+  message: string;
+};
+
+type GetAnnouncementsResponse = {
+  announcements: Announcement[];
+};
+
 type AcceptTermsResponse = {
   accept: boolean;
 };
@@ -282,6 +291,10 @@ export class ApiService {
     const terms = await this.#get<GetTermsResponse>('/user/terms');
 
     return terms;
+  }
+
+  async getAnnouncements() {
+    return this.#get<GetAnnouncementsResponse>('/announcements');
   }
 
   async acceptTerms(id: number) {

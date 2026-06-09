@@ -68,17 +68,12 @@ onMounted(setMembers);
 
 <template>
   <template v-if="total">
-    <el-row>
-      <el-col :span="24" class="divide-solid divide-y-2 divide-red-700">
-        <div class="grid-content p-6">
-          <h5 class="mb-2 text-2xl tracking-tight">
-            {{ title }}: {{ total }}
-          </h5>
-        </div>
-        <div></div>
-      </el-col>
-    </el-row>
-    <el-row class="p-10">
+    <div class="mt-4 pt-3 border-0 border-t-2 border-solid border-red-700">
+      <h5 class="text-2xl tracking-tight">
+        {{ title }}: {{ total }}
+      </h5>
+    </div>
+    <el-row class="px-10 pb-10 pt-3">
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <div class="py-2 w-full">
           <el-pagination class="items-center w-full" background layout="sizes, prev, pager, next" :total="total"
@@ -86,8 +81,8 @@ onMounted(setMembers);
             @current-change="updatePages($event)" @size-change="handlePageSizeChange" />
         </div>
         <div v-loading="isLoading">
-          <ul v-for="item of items" :key="item.id" class="list-disc">
-            <li>
+          <ul class="member-list">
+            <li v-for="item of items" :key="item.id" class="px-4 py-2 odd:bg-gray-50">
               <CollectionItem :field="item" :routePath="routePath" />
             </li>
           </ul>
@@ -101,3 +96,11 @@ onMounted(setMembers);
     </el-row>
   </template>
 </template>
+
+<style scoped>
+/* Match the member list font size to the page's body text (Element Plus
+   defaults el-link to 14px, smaller than the surrounding metadata). */
+.member-list :deep(.el-link) {
+  font-size: 1rem;
+}
+</style>

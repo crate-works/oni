@@ -206,22 +206,16 @@ fetchdata();
         </el-col>
       </el-row>
 
-      <el-row v-if="files.length">
-        <el-col :span="24" class="divide-solid divide-y-2 divide-red-700">
-          <div class="grid-content py-4">
-            <h2 class="text-2xl tracking-tight">
-              {{ t('object.files') }} {{ files.length }}
-              <MediaTypeIcon v-for="mt of mediaTypes" :mediaType="mt" />
-            </h2>
-          </div>
+      <div v-if="files.length" class="mt-4 pt-3 border-0 border-t-2 border-solid border-red-700">
+        <h2 class="text-2xl tracking-tight">
+          {{ t('object.files') }} {{ files.length }}
+          <MediaTypeIcon v-for="mt of mediaTypes" :mediaType="mt" />
+        </h2>
+      </div>
 
-          <div />
-        </el-col>
-      </el-row>
-
-      <el-row class="p-5">
+      <el-row class="px-5 pb-5 pt-3">
         <el-col :span="24">
-          <el-table :data="files" stripe style="width: 100%">
+          <el-table :data="files" stripe style="width: 100%" class="files-table">
             <el-table-column prop="filename" :label="t('object.filename')" min-width="200">
             </el-table-column>
 
@@ -345,3 +339,11 @@ fetchdata();
   </el-row>
 
 </template>
+
+<style scoped>
+/* Match the file list font size to the page's body text (Element Plus
+   defaults el-table to 14px, smaller than the surrounding metadata). */
+.files-table :deep(.cell) {
+  font-size: 1rem;
+}
+</style>

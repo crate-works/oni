@@ -9,9 +9,13 @@ const props = defineProps<{
   currentTime?: number;
   showHeader?: boolean;
   duration?: number;
+  // Deep-link arrival: pre-select this tier and highlight the annotation starting at matchStartMs
+  initialTier?: string;
+  matchStartMs?: number;
 }>();
 
-const viewMode = ref<'table' | 'timeline'>('timeline');
+// Arriving at a match opens the table view so the highlighted row is visible
+const viewMode = ref<'table' | 'timeline'>(props.matchStartMs !== undefined ? 'table' : 'timeline');
 const canShowTimeline = computed(() => props.currentTime !== undefined && props.duration);
 
 const emit = defineEmits<{
@@ -66,8 +70,9 @@ const fetchAndParse = async (url: string) => {
     const xml = await response.text();
     eafDoc.value = parseEaf(xml);
     const nonEmpty = tiers.value;
-    if (nonEmpty.length > 0) {
-      selectedTierIds.value = [nonEmpty[0].tierId];
+    const initial = nonEmpty.find((t) => t.tierId === props.initialTier) ?? nonEmpty[0];
+    if (initial) {
+      selectedTierIds.value = [initial.tierId];
     }
   } finally {
     loading.value = false;
@@ -112,47 +117,79 @@ const activeRowIndex = computed(() => {
   return mergedRows.value.findIndex((r) => isActive(r.startMs, r.endMs));
 });
 
+// The annotation a search deep link pointed at; highlighted persistently
+const matchedRowIndex = computed(() => {
+  if (props.matchStartMs === undefined) {
+    return -1;
+  }
+
+  return mergedRows.value.findIndex((r) => r.startMs === props.matchStartMs);
+});
+
+const scrollToRow = (index: number) => {
+  if (index < 0) {
+    return;
+  }
+
+  const tableEl = tableRef.value?.$el as HTMLElement | undefined;
+  if (!tableEl) {
+    return;
+  }
+
+  // Element Plus uses el-scrollbar inside the body wrapper
+  const scrollViewport = tableEl.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') as HTMLElement | null;
+  const rows = tableEl.querySelectorAll('.el-table__body tbody tr');
+  if (!scrollViewport || !rows?.[index]) {
+    return;
+  }
+
+  const row = rows[index] as HTMLElement;
+  const viewportHeight = scrollViewport.clientHeight;
+  const rowTop = row.offsetTop;
+  const rowBottom = rowTop + row.offsetHeight;
+  const scrollTop = scrollViewport.scrollTop;
+  const scrollBottom = scrollTop + viewportHeight;
+
+  // If row is outside visible area, scroll to centre it
+  if (rowBottom > scrollBottom || rowTop < scrollTop) {
+    scrollViewport.scrollTo({
+      top: rowTop - viewportHeight / 2,
+      behavior: 'smooth',
+    });
+  }
+};
+
 watch(activeRowIndex, (index) => {
   if (index < 0) {
     return;
   }
 
-  nextTick(() => {
-    const tableEl = tableRef.value?.$el as HTMLElement | undefined;
-    if (!tableEl) {
-      return;
-    }
-
-    // Element Plus uses el-scrollbar inside the body wrapper
-    const scrollViewport = tableEl.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') as HTMLElement | null;
-    const rows = tableEl.querySelectorAll('.el-table__body tbody tr');
-    if (!scrollViewport || !rows?.[index]) {
-      return;
-    }
-
-    const row = rows[index] as HTMLElement;
-    const viewportHeight = scrollViewport.clientHeight;
-    const rowTop = row.offsetTop;
-    const rowBottom = rowTop + row.offsetHeight;
-    const scrollTop = scrollViewport.scrollTop;
-    const scrollBottom = scrollTop + viewportHeight;
-
-    // If row is outside visible area, scroll to centre it
-    if (rowBottom > scrollBottom || rowTop < scrollTop) {
-      scrollViewport.scrollTo({
-        top: rowTop - viewportHeight / 2,
-        behavior: 'smooth',
-      });
-    }
-  });
+  nextTick(() => scrollToRow(index));
 });
+
+// Scroll the deep-linked match into view once it appears in the rendered table
+watch(
+  matchedRowIndex,
+  (index) => {
+    nextTick(() => scrollToRow(index));
+  },
+  { once: true },
+);
 
 const handleRowClick = (row: MergedRow) => {
   emit('seek', row.startMs / 1000);
 };
 
 const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) => {
-  return rowIndex === activeRowIndex.value ? 'eaf-active-row' : '';
+  if (rowIndex === activeRowIndex.value) {
+    return 'eaf-active-row';
+  }
+
+  if (rowIndex === matchedRowIndex.value) {
+    return 'eaf-matched-row';
+  }
+
+  return '';
 };
 </script>
 
@@ -231,5 +268,9 @@ const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) =
 .eaf-active-row {
   --el-table-tr-bg-color: var(--el-color-primary-light-8);
   font-weight: bold;
+}
+
+.eaf-matched-row {
+  --el-table-tr-bg-color: var(--el-color-warning-light-8);
 }
 </style>

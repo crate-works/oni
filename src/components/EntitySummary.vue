@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { RouterLink } from 'vue-router';
 import MediaTypeIcon from '@/components//widgets/MediaTypeIcon.vue';
 import AccessControlIcon from '@/components/widgets/AccessControlIcon.vue';
 import CommunicationModeIcon from '@/components/widgets/CommunicationModeIcon.vue';
 import { ui } from '@/configuration';
 import { getEntityUrl } from '@/lib/tools';
+import { segmentRows } from '@/segments';
 import type { EntityType } from '@/services/api';
 
 const { t } = useI18n();
@@ -12,6 +15,15 @@ const { entity } = defineProps<{ entity: EntityType }>();
 
 // TODO: Rename this
 const { searchDetails = [] } = ui.search || {};
+
+const VISIBLE_SEGMENTS = 2;
+
+const segments = computed(() => segmentRows(entity.id, entity.searchExtra?.segments ?? []));
+const segmentsExpanded = ref(false);
+const visibleSegments = computed(() =>
+  segmentsExpanded.value ? segments.value : segments.value.slice(0, VISIBLE_SEGMENTS),
+);
+const hiddenSegmentCount = computed(() => segments.value.length - VISIBLE_SEGMENTS);
 </script>
 
 <template>
@@ -90,7 +102,33 @@ const { searchDetails = [] } = ui.search || {};
           </span>
         </el-row>
 
-        <el-row align="middle" v-if="entity.searchExtra?.highlight">
+        <el-row align="middle" v-if="segments.length">
+          <ul class="w-full min-w-0">
+            <li v-for="(segment, index) of visibleSegments" :key="index" class="p-1">
+              <component :is="segment.url ? RouterLink : 'div'" v-bind="segment.url ? { to: segment.url } : {}"
+                class="flex items-center gap-2 min-w-0" :class="segment.url ? 'group' : ''">
+                <span v-if="segment.label"
+                  class="inline-flex items-center gap-1 shrink-0 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                  :class="segment.url ? 'group-hover:bg-gray-200' : ''">
+                  {{ segment.label }}
+                  <template v-if="segment.tier">
+                    <span>·</span>
+                    <span class="max-w-[20ch] truncate" :title="segment.tier">{{ segment.tier }}</span>
+                  </template>
+                </span>
+                <span v-if="segment.highlight" class="line-clamp-1 min-w-0"
+                  :class="segment.url ? 'group-hover:underline' : ''" v-html="'...' + segment.highlight + '...'" />
+              </component>
+            </li>
+            <li v-if="!segmentsExpanded && hiddenSegmentCount > 0" class="p-1">
+              <el-button link type="primary" size="small" @click="segmentsExpanded = true">
+                {{ t('entity.moreMatches', { n: hiddenSegmentCount }) }}
+              </el-button>
+            </li>
+          </ul>
+        </el-row>
+
+        <el-row align="middle" v-else-if="entity.searchExtra?.highlight">
           <ul>
             <li v-for="hl of Object.values(entity.searchExtra.highlight || {}).flat()" v-html="'...' + hl + '...'" class="p-2">
             </li>

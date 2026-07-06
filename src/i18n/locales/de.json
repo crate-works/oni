@@ -216,7 +216,7 @@
     "type": "Typ:"
   },
   "file": {
-    "play": "{name} abspielen",
-    "playFrom": "{name} ab {time} abspielen"
+    "play": "In {name} abspielen",
+    "playFrom": "In {name} ab {time} abspielen"
   }
 }

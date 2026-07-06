@@ -210,8 +210,13 @@
     "files": "Archivos:",
     "in": "En:",
     "memberOf": "Miembro de:",
+    "moreMatches": "+{n} coincidencias más",
     "objects": "Objetos:",
     "relevanceScore": "Puntuación de relevancia:",
     "type": "Tipo:"
+  },
+  "file": {
+    "play": "Reproducir {name}",
+    "playFrom": "Reproducir {name} desde {time}"
   }
 }

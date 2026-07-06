@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import AccessHelper from '@/components/AccessHelper.vue';
 import CSVWidget from '@/components/widgets/CSVWidget.vue';
 import EafTranscriptionWidget from '@/components/widgets/EafTranscriptionWidget.vue';
@@ -8,6 +10,14 @@ import PlainTextWidget from '@/components/widgets/PlainTextWidget.vue';
 import { isFileVisibleByMetadata, resolveFileVisibilityConfig } from '@/composables/fileVisibility';
 import { ui } from '@/configuration';
 import { first } from '@/lib/tools';
+import {
+  fileDeepLink,
+  formatTimecode,
+  parsePageParam,
+  parseStartParam,
+  parseTierParam,
+  startParamToMs,
+} from '@/segments';
 import type { AnnotationRef, ApiService, EntityType, RoCrate } from '@/services/api';
 
 const api = inject<ApiService>('api');
@@ -28,9 +38,19 @@ const {
 const data = ref();
 const streamUrl = ref('');
 const annotationUrls = ref<string[]>([]);
+const linkedMedia = ref<{ id: string; name: string }[]>([]);
 const currentTime = ref<number>(0);
 const mediaDuration = ref<number>(0);
 const mediaRef = ref<HTMLAudioElement | HTMLVideoElement | null>(null);
+
+const { t } = useI18n();
+
+// Deep-link arrival parameters (stale or malformed values are simply dropped)
+const route = useRoute();
+const pageParam = parsePageParam(route.query.page) ?? undefined;
+const startParam = parseStartParam(route.query.start);
+const tierParam = parseTierParam(route.query.tier) ?? undefined;
+const matchStartMs = startParam !== null ? startParamToMs(startParam) : undefined;
 const fileVisibility = resolveFileVisibilityConfig(ui.presentation?.fileVisibilityField);
 const shouldDisplayFile = isFileVisibleByMetadata(metadata as unknown as Record<string, unknown>, fileVisibility);
 const filename = computed(() => first(metadata.filename) || entity.id.split('/').pop() || 'file');
@@ -45,28 +65,32 @@ const resolveFile = async () => {
   streamUrl.value = (await api.getFileUrl(entity.id, filename.value, false)) || '';
 };
 
-const resolveAnnotations = async () => {
-  if (annotations.length === 0) {
-    return;
-  }
-
+// Resolve hasAnnotation/annotationOf references to the media files they point at
+const resolveMediaRefs = async (refs: AnnotationRef[]) => {
   const results = await Promise.all(
-    annotations.map(async (ann) => {
-      const result = await api.getEntity(ann['@id']);
-      if ('error' in result) {
+    refs.map(async (ref) => {
+      const result = await api.getEntity(ref['@id']);
+      if ('error' in result || result.entity.entityType !== 'http://schema.org/MediaObject') {
         return null;
       }
 
-      const annEntity = result.entity;
-      if (annEntity.entityType !== 'http://schema.org/MediaObject') {
-        return null;
-      }
-
-      const filename = first(ann.filename) || annEntity.name;
-      return api.getFileUrl(annEntity.id, filename, false);
+      return { id: result.entity.id, name: first(ref.filename) || result.entity.name };
     }),
   );
-  annotationUrls.value = results.filter((url): url is string => !!url);
+
+  return results.filter((media): media is { id: string; name: string } => !!media);
+};
+
+const resolveAnnotations = async () => {
+  const media = await resolveMediaRefs(annotations);
+  const urls = await Promise.all(media.map(({ id, name }) => api.getFileUrl(id, name, false)));
+  annotationUrls.value = urls.filter((url): url is string => !!url);
+};
+
+// A transcription's annotationOf references point at the media file(s) it
+// annotates; resolve them so the banner can link into the recording.
+const resolveLinkedMedia = async () => {
+  linkedMedia.value = await resolveMediaRefs(metadata.annotationOf ?? []);
 };
 
 const handleDownload = async () => {
@@ -92,6 +116,12 @@ const handleTimeUpdate = (event: Event) => {
 const handleLoadedMetadata = (event: Event) => {
   const el = event.target as HTMLMediaElement;
   mediaDuration.value = el.duration;
+
+  // Deep-link arrival: seek to ?start= but stay paused. The media element
+  // itself clamps seeks past the duration, so stale times can't break anything.
+  if (startParam !== null) {
+    el.currentTime = startParam;
+  }
 };
 
 const handleSeek = (seconds: number) => {
@@ -165,6 +195,10 @@ onMounted(async () => {
   ) {
     resolveAnnotations();
   }
+
+  if (shouldDisplayFile && previewerType === PreviewerType.eaf) {
+    resolveLinkedMedia();
+  }
 });
 </script>
 
@@ -175,7 +209,7 @@ onMounted(async () => {
         <div class="container max-screen-lg mx-auto">
           <div v-if="shouldDisplayFile && entity.access.content">
             <div v-if="previewerType === PreviewerType.pdf" class="w-full min-w-0">
-              <PDFWidget :src="streamUrl" />
+              <PDFWidget :src="streamUrl" :initial-page="pageParam" />
             </div>
 
             <div v-else-if="previewerType === PreviewerType.csv" class="p-4 wrap-break-word">
@@ -183,7 +217,19 @@ onMounted(async () => {
             </div>
 
             <div v-else-if="previewerType === PreviewerType.eaf" class="p-4">
-              <EafTranscriptionWidget :src="streamUrl" v-if="streamUrl" show-header />
+              <div v-if="linkedMedia.length" class="mb-3 rounded border border-gray-200 bg-gray-50 p-3 text-sm">
+                <div v-for="media of linkedMedia" :key="media.id" class="flex items-center gap-2 py-0.5">
+                  <font-awesome-icon icon="fa fa-play" class="text-gray-500" />
+                  <router-link :to="fileDeepLink(media.id, startParam, tierParam)"
+                    class="text-blue-600 hover:text-blue-800 underline">
+                    {{ matchStartMs !== undefined
+                      ? t('file.playFrom', { name: media.name, time: formatTimecode(matchStartMs) })
+                      : t('file.play', { name: media.name }) }}
+                  </router-link>
+                </div>
+              </div>
+              <EafTranscriptionWidget :src="streamUrl" v-if="streamUrl" show-header :initial-tier="tierParam"
+                :match-start-ms="matchStartMs" />
             </div>
 
             <div v-else-if="previewerType === PreviewerType.text" class="p-4 wrap-break-word">
@@ -198,7 +244,7 @@ onMounted(async () => {
               </component>
               <div v-for="(url, index) in annotationUrls" :key="index" class="w-full mt-4">
                 <EafTranscriptionWidget :src="url" :current-time="currentTime" :duration="mediaDuration"
-                  @seek="handleSeek" />
+                  :initial-tier="tierParam" :match-start-ms="matchStartMs" @seek="handleSeek" />
               </div>
             </div>
 

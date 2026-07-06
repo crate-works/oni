@@ -3,6 +3,7 @@ import { ROCrate } from 'ro-crate';
 import type { Filters } from '@/capabilities';
 import { api } from '@/configuration';
 import { parseContentSize } from '@/lib/tools';
+import type { SearchSegment } from '@/segments';
 import { forceRenewToken, getValidAccessToken } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
 import { useCapabilitiesStore } from '@/stores/capabilities';
@@ -73,7 +74,7 @@ export type EntityType = {
   communicationMode: 'Song' | 'Spoken';
   mediaType: Array<string>;
   accessControl: 'Public' | 'Restricted';
-  searchExtra?: { score: number; highlight: Record<string, string[]> };
+  searchExtra?: { score: number; highlight: Record<string, string[]>; segments?: SearchSegment[] };
 };
 
 type ApiErrorBody = {

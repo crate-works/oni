@@ -210,8 +210,13 @@
     "files": "Fichiers :",
     "in": "Dans :",
     "memberOf": "Membre de :",
+    "moreMatches": "+{n} correspondances supplémentaires",
     "objects": "Objets :",
     "relevanceScore": "Score de pertinence :",
     "type": "Type :"
+  },
+  "file": {
+    "play": "Lire {name}",
+    "playFrom": "Lire {name} à partir de {time}"
   }
 }

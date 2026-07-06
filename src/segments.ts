@@ -122,3 +122,24 @@ export const parseTierParam = (value: unknown): string | null => firstQueryValue
 // Rounds away the float drift from the seconds↔ms conversion (192.5 * 1000 is
 // not exactly 192500 in IEEE 754), so a URL start always matches its annotation.
 export const startParamToMs = (startSeconds: number): number => Math.round(startSeconds * 1000);
+
+export type AnnotationInterval = { startMs: number; endMs: number };
+
+// The annotation whose interval contains the start time (start inclusive, end
+// exclusive); failing that, the nearest by start time — so slightly-off or
+// hand-edited links still land on a plausible annotation.
+export const matchAnnotation = <T extends AnnotationInterval>(annotations: T[], startMs: number): T | null => {
+  const containing = annotations.find((a) => a.startMs <= startMs && startMs < a.endMs);
+  if (containing) {
+    return containing;
+  }
+
+  let nearest: T | null = null;
+  for (const annotation of annotations) {
+    if (!nearest || Math.abs(annotation.startMs - startMs) < Math.abs(nearest.startMs - startMs)) {
+      nearest = annotation;
+    }
+  }
+
+  return nearest;
+};

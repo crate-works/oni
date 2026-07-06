@@ -216,7 +216,7 @@
     "type": "Type:"
   },
   "file": {
-    "play": "Play {name}",
-    "playFrom": "Play {name} from {time}"
+    "play": "Play in {name}",
+    "playFrom": "Play in {name} from {time}"
   }
 }

@@ -4,6 +4,7 @@ import {
   clampPage,
   fileDeepLink,
   formatTimecode,
+  matchAnnotation,
   parsePageParam,
   parseStartParam,
   parseTierParam,
@@ -189,6 +190,33 @@ describe('parseTierParam', () => {
     expect(parseTierParam('')).toBe(null);
     expect(parseTierParam(undefined)).toBe(null);
     expect(parseTierParam(null)).toBe(null);
+  });
+});
+
+describe('matchAnnotation', () => {
+  const annotations = [
+    { startMs: 0, endMs: 1000, id: 'a' },
+    { startMs: 2000, endMs: 3000, id: 'b' },
+    { startMs: 10000, endMs: 12000, id: 'c' },
+  ];
+
+  it('returns the annotation whose interval contains the start time', () => {
+    expect(matchAnnotation(annotations, 2500)?.id).toBe('b');
+    expect(matchAnnotation(annotations, 2000)?.id).toBe('b'); // inclusive start
+  });
+
+  it('treats the interval end as exclusive', () => {
+    expect(matchAnnotation(annotations, 1000)?.id).toBe('a'); // nearest, not containing
+  });
+
+  it('falls back to the nearest annotation by start time', () => {
+    expect(matchAnnotation(annotations, 900)?.id).toBe('a'); // contained, not fallback
+    expect(matchAnnotation(annotations, 1400)?.id).toBe('b');
+    expect(matchAnnotation(annotations, 99000)?.id).toBe('c');
+  });
+
+  it('returns null for an empty tier', () => {
+    expect(matchAnnotation([], 2500)).toBe(null);
   });
 });
 

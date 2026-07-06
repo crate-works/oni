@@ -3,6 +3,7 @@ import type { TableInstance } from 'element-plus';
 import { computed, nextTick, ref, watch } from 'vue';
 import EafTimelineView from '@/components/widgets/EafTimelineView.vue';
 import { type EafDocument, parseEaf } from '@/composables/useEafParser';
+import { matchAnnotation } from '@/segments';
 
 const props = defineProps<{
   src: string;
@@ -14,8 +15,7 @@ const props = defineProps<{
   matchStartMs?: number;
 }>();
 
-// Arriving at a match opens the table view so the highlighted row is visible
-const viewMode = ref<'table' | 'timeline'>(props.matchStartMs !== undefined ? 'table' : 'timeline');
+const viewMode = ref<'table' | 'timeline'>('timeline');
 const canShowTimeline = computed(() => props.currentTime !== undefined && props.duration);
 
 const emit = defineEmits<{
@@ -118,13 +118,15 @@ const activeRowIndex = computed(() => {
 });
 
 // The annotation a search deep link pointed at; highlighted persistently
-const matchedRowIndex = computed(() => {
+const matchedRow = computed(() => {
   if (props.matchStartMs === undefined) {
-    return -1;
+    return null;
   }
 
-  return mergedRows.value.findIndex((r) => r.startMs === props.matchStartMs);
+  return matchAnnotation(mergedRows.value, props.matchStartMs);
 });
+
+const matchedRowIndex = computed(() => (matchedRow.value ? mergedRows.value.indexOf(matchedRow.value) : -1));
 
 const scrollToRow = (index: number) => {
   if (index < 0) {
@@ -239,7 +241,7 @@ const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) =
 
     <div v-if="canShowTimeline && viewMode === 'timeline'">
       <EafTimelineView :tiers="selectedTiers" :current-time-ms="currentTimeMs" :duration="props.duration! * 1000"
-        @seek="(s) => emit('seek', s)" />
+        :match="matchedRow ?? undefined" @seek="(s) => emit('seek', s)" />
     </div>
 
     <div v-else style="height: 400px;">

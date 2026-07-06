@@ -216,7 +216,7 @@
     "type": "Type :"
   },
   "file": {
-    "play": "Lire {name}",
-    "playFrom": "Lire {name} à partir de {time}"
+    "play": "Lire dans {name}",
+    "playFrom": "Lire dans {name} à partir de {time}"
   }
 }

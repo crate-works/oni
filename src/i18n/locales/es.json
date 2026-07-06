@@ -216,7 +216,7 @@
     "type": "Tipo:"
   },
   "file": {
-    "play": "Reproducir {name}",
-    "playFrom": "Reproducir {name} desde {time}"
+    "play": "Reproducir en {name}",
+    "playFrom": "Reproducir en {name} desde {time}"
   }
 }

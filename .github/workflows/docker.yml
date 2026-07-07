@@ -3,6 +3,11 @@ name: Docker Image
 on:
   pull_request:
     branches: [main]
+  # Test-branch only: publish a branch-tagged image to GHCR on every push so
+  # the combined capabilities + segment-deep-links work can be deployed for
+  # testing. Not intended to be merged to main.
+  push:
+    branches: [test/capabilities-segments]
   workflow_call:
     inputs:
       version:
@@ -129,9 +134,10 @@ jobs:
         with:
           images: ${{ env.GHCR_REGISTRY }}/${{ steps.prepare.outputs.image_name }}
           tags: |
-            type=raw,value=${{ inputs.version }}
-            type=raw,value=${{ steps.prepare.outputs.major_minor }}
-            type=raw,value=latest
+            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
+            type=raw,value=${{ steps.prepare.outputs.major_minor }},enable=${{ inputs.version != '' }}
+            type=raw,value=latest,enable=${{ inputs.version != '' }}
+            type=ref,event=branch
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
@@ -143,8 +149,4 @@ jobs:
             $(printf "${GHCR_REGISTRY}/${IMAGE_NAME}@sha256:%s " *)
 
       - name: Inspect image
-        env:
-          GHCR_REGISTRY: ${{ env.GHCR_REGISTRY }}
-          IMAGE_NAME: ${{ steps.prepare.outputs.image_name }}
-          VERSION: ${{ inputs.version }}
-        run: docker buildx imagetools inspect "${GHCR_REGISTRY}/${IMAGE_NAME}:${VERSION}"
+        run: docker buildx imagetools inspect "$(jq -r '.tags[0]' <<< "$DOCKER_METADATA_OUTPUT_JSON")"

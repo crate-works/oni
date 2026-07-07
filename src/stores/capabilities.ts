@@ -1,7 +1,9 @@
+import { captureMessage } from '@sentry/vue';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import { type Capabilities, parseCapabilities } from '@/capabilities';
+import { type Capabilities, findUnsupportedFacets, parseCapabilities } from '@/capabilities';
+import { ui } from '@/configuration';
 import type { ApiService } from '@/services/api';
 
 // Session-scoped feature detection against the archive's GET /capabilities
@@ -11,6 +13,12 @@ import type { ApiService } from '@/services/api';
 export const useCapabilitiesStore = defineStore('capabilities', () => {
   const status = ref<'pending' | 'loaded' | 'failed'>('pending');
   const capabilities = ref<Capabilities>();
+
+  // Empty while pending or failed — the mismatch check only judges a loaded
+  // response; in the failed state the banner already covers non-conformance.
+  const unsupportedFacets = computed(() =>
+    capabilities.value ? findUnsupportedFacets(ui.aggregations, capabilities.value.facets) : [],
+  );
 
   const init = async (api: ApiService) => {
     let response: unknown;
@@ -32,6 +40,16 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
 
     capabilities.value = parsed;
     status.value = 'loaded';
+
+    // Warn about facet misconfiguration exactly once, on successful load —
+    // that deduplicates the console warning and Sentry event per session.
+    if (unsupportedFacets.value.length > 0) {
+      const offenders = unsupportedFacets.value.join(', ');
+      console.warn(
+        `This site's configuration declares search facets the archive's API does not support, which can break search: ${offenders}`,
+      );
+      captureMessage(`Configured facets not supported by the archive's API: ${offenders}`, 'error');
+    }
   };
 
   // capabilities is only ever set on a successful load, so these fail closed
@@ -42,7 +60,7 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
   // empty set which would mean "the archive declares no facets".
   const supportedFacets = computed(() => (capabilities.value ? new Set(Object.keys(capabilities.value.facets)) : null));
 
-  const showBanner = computed(() => status.value === 'failed');
+  const showBanner = computed(() => status.value === 'failed' || unsupportedFacets.value.length > 0);
 
-  return { status, capabilities, init, hasExtension, supportedFacets, showBanner };
+  return { status, capabilities, unsupportedFacets, init, hasExtension, supportedFacets, showBanner };
 });

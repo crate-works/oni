@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseCapabilities } from '@/capabilities';
+import { findUnsupportedFacets, parseCapabilities } from '@/capabilities';
 import { validPayload } from './fixtures/capabilities';
 
 describe('parseCapabilities', () => {
@@ -52,5 +52,30 @@ describe('parseCapabilities', () => {
     expect(parseCapabilities(null)).toBe(null);
     expect(parseCapabilities('capabilities')).toBe(null);
     expect(parseCapabilities({ error: 'Not found' })).toBe(null);
+  });
+});
+
+describe('findUnsupportedFacets', () => {
+  it('returns configured facet names the API does not declare', () => {
+    const aggregations = [{ name: 'inLanguage' }, { name: 'bogusFacet' }, { name: 'anotherBogus' }];
+
+    expect(findUnsupportedFacets(aggregations, validPayload.facets)).toEqual(['bogusFacet', 'anotherBogus']);
+  });
+
+  it('returns nothing when declared facets are merely omitted from the configuration', () => {
+    expect(findUnsupportedFacets([{ name: 'mediaType' }], validPayload.facets)).toEqual([]);
+  });
+
+  it('matches by name only, ignoring capability labels and aggregation types', () => {
+    const aggregations = [
+      { name: 'inLanguage', display: 'Renamed By Config', type: 'standard' },
+      { name: 'mediaType', display: 'Media', type: 'date_histogram' },
+    ];
+
+    expect(findUnsupportedFacets(aggregations, validPayload.facets)).toEqual([]);
+  });
+
+  it('returns nothing for an empty configuration', () => {
+    expect(findUnsupportedFacets([], validPayload.facets)).toEqual([]);
   });
 });

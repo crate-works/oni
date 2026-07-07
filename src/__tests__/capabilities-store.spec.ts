@@ -1,11 +1,33 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// The configuration module fetches /configuration.json at import time, which
+// isn't available under vitest — stub the one field the store reads. Tests
+// mutate ui.aggregations to simulate different configurations.
+vi.mock('@/configuration', () => ({ ui: { aggregations: [] } }));
+vi.mock('@sentry/vue', () => ({ captureMessage: vi.fn() }));
+
+import { captureMessage } from '@sentry/vue';
+import { ui } from '@/configuration';
 import type { ApiService } from '@/services/api';
 import { useCapabilitiesStore } from '@/stores/capabilities';
 import { validPayload } from './fixtures/capabilities';
 
 const stubApi = (getCapabilities: () => Promise<object>) => ({ getCapabilities }) as unknown as ApiService;
+
+const aggregation = (name: string) => ({ display: name, name, type: 'standard' as const, active: false });
+
+const load = async (store: ReturnType<typeof useCapabilitiesStore>) => {
+  await store.init(stubApi(async () => validPayload));
+};
+
+const fail = async (store: ReturnType<typeof useCapabilitiesStore>) => {
+  await store.init(
+    stubApi(async () => {
+      throw new Error('network error');
+    }),
+  );
+};
 
 describe('capabilities store', () => {
   beforeEach(() => {
@@ -69,18 +91,6 @@ describe('capabilities store getters', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
-  const load = async (store: ReturnType<typeof useCapabilitiesStore>) => {
-    await store.init(stubApi(async () => validPayload));
-  };
-
-  const fail = async (store: ReturnType<typeof useCapabilitiesStore>) => {
-    await store.init(
-      stubApi(async () => {
-        throw new Error('network error');
-      }),
-    );
-  };
-
   describe('hasExtension', () => {
     it('is false while pending', () => {
       expect(useCapabilitiesStore().hasExtension('segments')).toBe(false);
@@ -140,5 +150,67 @@ describe('capabilities store getters', () => {
 
       expect(store.showBanner).toBe(false);
     });
+  });
+});
+
+describe('capabilities store facet mismatch check', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+    ui.aggregations = [];
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('records configured facets the API does not declare and shows the banner', async () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('bogusFacet')];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.unsupportedFacets).toEqual(['bogusFacet']);
+    expect(store.showBanner).toBe(true);
+  });
+
+  it('warns once on the console naming all offending facets', async () => {
+    ui.aggregations = [aggregation('bogusFacet'), aggregation('anotherBogus')];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(console.warn).toHaveBeenCalledOnce();
+    expect(vi.mocked(console.warn).mock.calls[0]?.[0]).toContain('bogusFacet, anotherBogus');
+  });
+
+  it('raises one Sentry error naming the offending facets', async () => {
+    ui.aggregations = [aggregation('bogusFacet')];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(captureMessage).toHaveBeenCalledOnce();
+    expect(vi.mocked(captureMessage).mock.calls[0]?.[0]).toContain('bogusFacet');
+    expect(vi.mocked(captureMessage).mock.calls[0]?.[1]).toBe('error');
+  });
+
+  it('produces nothing when the configuration only uses declared facets', async () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('mediaType')];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.unsupportedFacets).toEqual([]);
+    expect(store.showBanner).toBe(false);
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(captureMessage).not.toHaveBeenCalled();
+  });
+
+  it('skips the check entirely when capabilities failed', async () => {
+    ui.aggregations = [aggregation('bogusFacet')];
+    const store = useCapabilitiesStore();
+
+    await fail(store);
+
+    expect(store.unsupportedFacets).toEqual([]);
+    expect(captureMessage).not.toHaveBeenCalled();
   });
 });

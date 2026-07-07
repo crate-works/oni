@@ -23,3 +23,13 @@ export const parseCapabilities = (data: unknown): Capabilities | null => {
 
   return result.success ? result.data : null;
 };
+
+// Configured aggregations the API doesn't declare can break search with 500s,
+// so they're a deployment error. Comparison is by facet name only: capability
+// labels are ignored (renaming facets in configuration is the point), and the
+// reverse direction — declared facets the configuration omits — is deliberate
+// curation, not a mismatch.
+export const findUnsupportedFacets = (
+  aggregations: { name: string }[],
+  capabilityFacets: Capabilities['facets'],
+): string[] => aggregations.map(({ name }) => name).filter((name) => !(name in capabilityFacets));

@@ -24,6 +24,7 @@ import { setupI18n } from '@/i18n';
 import router from '@/router';
 import { ApiService } from '@/services/api';
 import { initAuth } from '@/services/auth';
+import { useCapabilitiesStore } from '@/stores/capabilities';
 import { useI18nStore } from '@/stores/i18n';
 
 library.add(fas, far, fab);
@@ -63,6 +64,13 @@ app.use(pinia);
 app.use(router);
 app.use(VueCookies);
 
+const api = new ApiService();
+app.provide('api', api);
+
+// Fire-and-forget: the app renders immediately and the store reactively
+// updates when the capabilities fetch settles. Fetched once per session.
+void useCapabilitiesStore().init(api);
+
 const i18nStore = useI18nStore();
 i18nStore.initializeLocale();
 
@@ -81,9 +89,6 @@ if (ui.analytics) {
   });
   app.use(gtm);
 }
-
-const api = new ApiService();
-app.provide('api', api);
 
 app.mount('#app');
 

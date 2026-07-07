@@ -297,6 +297,12 @@ export class ApiService {
     return this.#get<GetAnnouncementsResponse>('/announcements');
   }
 
+  // Returns the raw JSON body — the capabilities store validates it at the
+  // trust boundary, treating anything malformed as non-conformance.
+  async getCapabilities() {
+    return this.#get<object>('/capabilities');
+  }
+
   async acceptTerms(id: number) {
     const terms = await this.#post<AcceptTermsResponse>('/user/terms/accept', { id: String(id) });
 

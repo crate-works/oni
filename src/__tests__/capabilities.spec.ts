@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 
-import { findUnsupportedFacets, parseCapabilities } from '@/capabilities';
+import { findUnsupportedFacets, parseCapabilities, stripUnsupportedFilters } from '@/capabilities';
 import { validPayload } from './fixtures/capabilities';
 
 describe('parseCapabilities', () => {
@@ -77,5 +77,46 @@ describe('findUnsupportedFacets', () => {
 
   it('returns nothing for an empty configuration', () => {
     expect(findUnsupportedFacets([], validPayload.facets)).toEqual([]);
+  });
+});
+
+describe('stripUnsupportedFilters', () => {
+  let warn: MockInstance;
+
+  beforeEach(() => {
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('drops filter keys the API does not declare', () => {
+    const filters = { inLanguage: ['English'], bogusFacet: ['whatever'] };
+
+    expect(stripUnsupportedFilters(filters, new Set(['inLanguage']))).toEqual({ inLanguage: ['English'] });
+  });
+
+  it('passes filters through untouched when the supported set is unknown', () => {
+    const filters = { bogusFacet: ['whatever'] };
+
+    expect(stripUnsupportedFilters(filters, null)).toBe(filters);
+  });
+
+  it('logs each dropped filter key to the console', () => {
+    stripUnsupportedFilters({ bogusFacet: ['a'], anotherBogus: ['b'] }, new Set(['inLanguage']));
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('bogusFacet'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('anotherBogus'));
+  });
+
+  it('preserves supported keys and their values exactly', () => {
+    const filters = { inLanguage: ['English', 'Tok Pisin'], mediaType: ['audio/wav'] };
+
+    expect(stripUnsupportedFilters(filters, new Set(['inLanguage', 'mediaType']))).toEqual(filters);
+  });
+
+  it('is a no-op for empty filters', () => {
+    expect(stripUnsupportedFilters({}, new Set(['inLanguage']))).toEqual({});
   });
 });

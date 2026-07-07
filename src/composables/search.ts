@@ -1,8 +1,10 @@
 import { useGtm } from '@gtm-support/vue-gtm';
 import { inject, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { stripUnsupportedFilters } from '@/capabilities';
 import { defaultPageSize, ui } from '@/configuration';
 import type { ApiService, EntityType, GetSearchResponse, SearchParams } from '@/services/api';
+import { useCapabilitiesStore } from '@/stores/capabilities';
 
 const { mapConfig, searchFields } = ui;
 
@@ -88,6 +90,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
   const router = useRouter();
   const route = useRoute();
   const gtm = useGtm();
+  const capabilitiesStore = useCapabilitiesStore();
 
   const api = inject<ApiService>('api');
   if (!api) {
@@ -219,6 +222,12 @@ export const useSearch = (searchType: 'list' | 'map') => {
     }
   };
 
+  // Every outgoing request builds its filters through this, so unsupported
+  // keys are stripped on both the list and map (including geohash) paths.
+  // Only the request is sanitised: filter state in the URL and UI stays as
+  // the visitor wrote it.
+  const requestFilters = () => stripUnsupportedFilters(filters.value, capabilitiesStore.supportedFacets);
+
   const calculatePrecision = (zoomLevel: number) => {
     // This is a way to match zoom levels in leaflet vs precision levels in elastic/opensearch geoHashGridAggregation
     let precision = Math.floor(zoomLevel / 2);
@@ -252,7 +261,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
       const params: SearchParams = {
         query,
         searchType: advancedSearchEnabled.value ? 'advanced' : 'basic',
-        filters: filters.value,
+        filters: requestFilters(),
         limit: pageSize.value,
         offset: (currentPage.value - 1) * pageSize.value,
         sort: selectedSorting.value?.value,
@@ -515,6 +524,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
     currentPage,
 
     onInputChange,
+    requestFilters,
     updateRoutes: syncStateToUrlAndNavigate,
     updateFilter,
     filtersChanged,

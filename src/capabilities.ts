@@ -33,3 +33,27 @@ export const findUnsupportedFacets = (
   aggregations: { name: string }[],
   capabilityFacets: Capabilities['facets'],
 ): string[] => aggregations.map(({ name }) => name).filter((name) => !(name in capabilityFacets));
+
+// Stale bookmarks and shared search URLs can carry filter keys the archive no
+// longer indexes, and sending them can 500 the search. A null supported set
+// means capabilities is pending or failed — pass filters through untouched
+// rather than falsely strip what we couldn't verify.
+export const stripUnsupportedFilters = (
+  filters: Record<string, string[]>,
+  supportedFacets: ReadonlySet<string> | null,
+): Record<string, string[]> => {
+  if (!supportedFacets) {
+    return filters;
+  }
+
+  return Object.fromEntries(
+    Object.entries(filters).filter(([name]) => {
+      const supported = supportedFacets.has(name);
+      if (!supported) {
+        console.warn(`Dropping search filter not supported by the archive's API: ${name}`);
+      }
+
+      return supported;
+    }),
+  );
+};

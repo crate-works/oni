@@ -1,12 +1,16 @@
 import { useGtm } from '@gtm-support/vue-gtm';
 import { inject, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import type { Filters } from '@/capabilities';
+import { toRequestFilters, yearFromFilterValue } from '@/capabilities';
 import { defaultPageSize, ui } from '@/configuration';
 import type { ApiService, EntityType, GetSearchResponse, SearchParams } from '@/services/api';
 import { useCapabilitiesStore } from '@/stores/capabilities';
 
 const { mapConfig, searchFields } = ui;
+
+// Date facets hold plain year strings in UI state; toRequestFilters converts
+// them to the API's range syntax per search request.
+const dateFacets = new Set((ui.aggregations ?? []).filter((a) => a.type === 'date_histogram').map((a) => a.name));
 
 export type Bucket = {
   name: string;
@@ -104,7 +108,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
   const searchInput = ref('');
   const advancedSearchLines = ref<AdvancedSearchLine[]>([{ ...blankAdvancedSearchLine }]);
   const advancedSearchEnabled = ref(false);
-  const filters = ref<Filters>({});
+  const filters = ref<Record<string, string[]>>({});
 
   // Pagination
   const pageSize = ref(defaultPageSize);
@@ -155,9 +159,10 @@ export const useSearch = (searchType: 'list' | 'map') => {
     filters.value = {};
 
     if (route.query.f) {
-      const filterQuery = JSON.parse(decodeURIComponent(route.query.f.toString())) as Filters;
+      const filterQuery = JSON.parse(decodeURIComponent(route.query.f.toString())) as Record<string, string[]>;
       for (const [key, val] of Object.entries(filterQuery)) {
-        filters.value[key] = val;
+        const values = dateFacets.has(key) ? val.flatMap((v) => yearFromFilterValue(v) ?? []) : val;
+        filters.value[key] = values;
         if (filters.value[key].length === 0) {
           delete filters.value[key];
         }
@@ -256,7 +261,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
       const params: SearchParams = {
         query,
         searchType: advancedSearchEnabled.value ? 'advanced' : 'basic',
-        filters: filters.value,
+        filters: toRequestFilters(filters.value, dateFacets),
         limit: pageSize.value,
         offset: (currentPage.value - 1) * pageSize.value,
         sort: selectedSorting.value?.value,

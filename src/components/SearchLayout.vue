@@ -81,13 +81,6 @@ const clean = (value: string) => {
     return 'No';
   }
 
-  // Check if value is an ISO timestamp range (date filter)
-  // Format: "YYYY-01-01T00:00:00.000Z TO YYYY-12-31T23:59:59.999Z"
-  const dateRangeMatch = value.match(/^(\d{4})-\d{2}-\d{2}T/);
-  if (dateRangeMatch) {
-    return dateRangeMatch[1]; // Return just the year
-  }
-
   return value.replace(/@|_|(\..*)/g, '');
 };
 </script>

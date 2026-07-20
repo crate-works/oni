@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { findUnsupportedFacets, parseCapabilities, stripUnsupportedFilters } from '@/capabilities';
+import {
+  findUnsupportedFacets,
+  parseCapabilities,
+  stripUnsupportedFilters,
+  toRequestFilters,
+  yearFromFilterValue,
+} from '@/capabilities';
 import { validPayload } from './fixtures/capabilities';
 
 describe('parseCapabilities', () => {
@@ -147,5 +153,47 @@ describe('stripUnsupportedFilters', () => {
 
   it('is a no-op for empty filters', () => {
     expect(stripUnsupportedFilters({}, new Set(['inLanguage']))).toEqual({ filters: {}, dropped: [] });
+  });
+});
+
+describe('toRequestFilters', () => {
+  it('converts date facet years to an array of ranges OR-ed together', () => {
+    expect(toRequestFilters({ createdAt: ['1965', '1972'] }, new Set(['createdAt']))).toEqual({
+      createdAt: [
+        { gte: '1965-01-01', lte: '1965-12-31' },
+        { gte: '1972-01-01', lte: '1972-12-31' },
+      ],
+    });
+  });
+
+  it('leaves term filters untouched alongside a date conversion', () => {
+    const converted = toRequestFilters({ inLanguage: ['English'], createdAt: ['1965'] }, new Set(['createdAt']));
+
+    expect(converted).toEqual({
+      inLanguage: ['English'],
+      createdAt: [{ gte: '1965-01-01', lte: '1965-12-31' }],
+    });
+  });
+
+  it('returns the input object itself when no date field is present', () => {
+    const filters = { inLanguage: ['English', 'Tok Pisin'] };
+
+    expect(toRequestFilters(filters, new Set(['createdAt']))).toBe(filters);
+  });
+});
+
+describe('yearFromFilterValue', () => {
+  it('passes a plain year through', () => {
+    expect(yearFromFilterValue('1965')).toBe('1965');
+  });
+
+  it('extracts the year from a pre-0.2.0 timestamp-range value', () => {
+    expect(yearFromFilterValue('1965-01-01T00:00:00.000Z TO 1965-12-31T23:59:59.999Z')).toBe('1965');
+  });
+
+  it('rejects values that do not lead with a year', () => {
+    expect(yearFromFilterValue('English')).toBe(undefined);
+    expect(yearFromFilterValue('19650')).toBe(undefined);
+    expect(yearFromFilterValue('')).toBe(undefined);
   });
 });

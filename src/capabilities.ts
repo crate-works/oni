@@ -5,8 +5,14 @@
 
 import { z } from 'zod/v4';
 
-// Search request filters: facet/filter field name to selected values.
-export type Filters = Record<string, string[]>;
+// An inclusive range constraint for a date or number filter (spec 0.2.0). At
+// least one bound; ISO 8601 strings for dates, numbers for numeric fields.
+type FilterRange = { gte?: string | number; lte?: string | number };
+
+// Search request filters: field name to selected terms, or for date/number
+// fields a range — single, or an array matched as an OR of its ranges. The
+// spec forbids mixing terms and ranges in one array.
+export type Filters = Record<string, string[] | FilterRange | FilterRange[]>;
 
 const capabilitiesSchema = z.looseObject({
   apiVersion: z.string(),
@@ -35,6 +41,28 @@ export const parseCapabilities = (data: unknown): Capabilities | null => {
 
   return result.success ? result.data : null;
 };
+
+// The date facet selects whole years, held in UI state and URLs as plain year
+// strings; the wire format for a date filter is an array of inclusive ranges
+// OR-ed together. Returns the input object itself when no date field is
+// present, as this runs on every search request.
+export const toRequestFilters = (filters: Record<string, string[]>, dateFields: ReadonlySet<string>): Filters => {
+  if (!Object.keys(filters).some((name) => dateFields.has(name))) {
+    return filters;
+  }
+
+  return Object.fromEntries(
+    Object.entries(filters).map(([name, values]) => [
+      name,
+      dateFields.has(name) ? values.map((year) => ({ gte: `${year}-01-01`, lte: `${year}-12-31` })) : values,
+    ]),
+  );
+};
+
+// Date facet values in URLs: currently plain years, but pre-0.2.0 bookmarks
+// carried "YYYY-01-01T00:00:00.000Z TO YYYY-12-31T23:59:59.999Z" strings. Both
+// lead with the year, which is all the facet keeps.
+export const yearFromFilterValue = (value: string): string | undefined => value.match(/^(\d{4})(?:-|$)/)?.[1];
 
 // Configured aggregations the API doesn't declare can break search with 500s,
 // so they're a deployment error. Comparison is by facet name only: capability

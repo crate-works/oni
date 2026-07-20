@@ -14,10 +14,6 @@ import { useCapabilitiesStore } from '@/stores/capabilities';
 const authStore = useAuthStore();
 const capabilitiesStore = useCapabilitiesStore();
 
-// Dismissal lasts for the page load only — the banner returns on reload while
-// the archive remains non-conformant.
-const capabilitiesBannerDismissed = ref(false);
-
 const api = inject<ApiService>('api');
 if (!api) {
   throw new Error('API instance not provided');
@@ -123,16 +119,14 @@ if (manageTermsAndConditions) {
       <FooterView />
     </footer>
 
-    <div
-      v-if="capabilitiesStore.showBanner && !capabilitiesBannerDismissed"
-      class="fixed bottom-0 inset-x-0 z-50"
-    >
+    <!-- el-alert handles its own dismissal; it lasts for the page load only,
+         so the banner returns on reload while the archive is non-conformant. -->
+    <div v-if="capabilitiesStore.showBanner" class="fixed bottom-0 inset-x-0 z-50">
       <el-alert
         title="This archive's API does not support all features of this site. Some functionality may be unavailable."
         type="warning"
         show-icon
         center
-        @close="capabilitiesBannerDismissed = true"
       />
     </div>
   </template>

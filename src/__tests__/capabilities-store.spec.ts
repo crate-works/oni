@@ -1,10 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The configuration module fetches /configuration.json at import time, which
-// isn't available under vitest — stub the one field the store reads. Tests
-// mutate ui.aggregations to simulate different configurations.
-vi.mock('@/configuration', () => ({ ui: { aggregations: [] } }));
+vi.mock('@/configuration');
 vi.mock('@sentry/vue', () => ({ captureMessage: vi.fn() }));
 
 import { captureMessage } from '@sentry/vue';
@@ -33,6 +30,7 @@ describe('capabilities store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.restoreAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   it('starts pending', () => {
@@ -44,50 +42,44 @@ describe('capabilities store', () => {
   it('transitions to loaded with the parsed payload on a valid response', async () => {
     const store = useCapabilitiesStore();
 
-    await store.init(stubApi(async () => validPayload));
+    await load(store);
 
     expect(store.status).toBe('loaded');
     expect(store.capabilities).toEqual(validPayload);
   });
 
   it('transitions to failed with a console warning when the fetch throws', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const store = useCapabilitiesStore();
 
-    await store.init(
-      stubApi(async () => {
-        throw new Error('network error');
-      }),
-    );
+    await fail(store);
 
     expect(store.status).toBe('failed');
-    expect(warn).toHaveBeenCalledOnce();
+    expect(console.warn).toHaveBeenCalledOnce();
   });
 
   it('transitions to failed on a 404 error response', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const store = useCapabilitiesStore();
 
     await store.init(stubApi(async () => ({ error: 'Not found' })));
 
     expect(store.status).toBe('failed');
-    expect(warn).toHaveBeenCalledOnce();
+    expect(console.warn).toHaveBeenCalledOnce();
   });
 
   it('transitions to failed on a malformed payload', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const store = useCapabilitiesStore();
 
     await store.init(stubApi(async () => ({ apiVersion: '0.1.0' })));
 
     expect(store.status).toBe('failed');
-    expect(warn).toHaveBeenCalledOnce();
+    expect(console.warn).toHaveBeenCalledOnce();
   });
 });
 
 describe('capabilities store getters', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    vi.restoreAllMocks();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -112,23 +104,62 @@ describe('capabilities store getters', () => {
     });
   });
 
-  describe('supportedFacets', () => {
+  describe('supportedFilters', () => {
     it('is null while pending', () => {
-      expect(useCapabilitiesStore().supportedFacets).toBe(null);
+      expect(useCapabilitiesStore().supportedFilters).toBe(null);
     });
 
     it('is null when failed', async () => {
       const store = useCapabilitiesStore();
       await fail(store);
 
-      expect(store.supportedFacets).toBe(null);
+      expect(store.supportedFilters).toBe(null);
     });
 
-    it('is the set of declared facet names when loaded', async () => {
+    it('is the set of declared filter names when loaded, including filter-only fields', async () => {
       const store = useCapabilitiesStore();
       await load(store);
 
-      expect(store.supportedFacets).toEqual(new Set(['inLanguage', 'mediaType']));
+      expect(store.supportedFilters).toEqual(new Set(['inLanguage', 'mediaType', 'createdAt']));
+    });
+  });
+
+  describe('sanitiseFilters', () => {
+    it('passes filters through untouched while pending', () => {
+      const filters = { bogusFacet: ['whatever'] };
+
+      expect(useCapabilitiesStore().sanitiseFilters(filters)).toBe(filters);
+    });
+
+    it('drops undeclared keys once loaded', async () => {
+      const store = useCapabilitiesStore();
+      await load(store);
+
+      const sanitised = store.sanitiseFilters({ inLanguage: ['English'], bogusFacet: ['whatever'] });
+
+      expect(sanitised).toEqual({ inLanguage: ['English'] });
+    });
+
+    it('keeps filter-only fields that are not facets', async () => {
+      const store = useCapabilitiesStore();
+      await load(store);
+
+      const filters = { createdAt: ['2020'] };
+
+      expect(store.sanitiseFilters(filters)).toBe(filters);
+    });
+
+    it('warns once per dropped key across repeated requests', async () => {
+      const store = useCapabilitiesStore();
+      await load(store);
+
+      store.sanitiseFilters({ bogusFacet: ['a'] });
+      store.sanitiseFilters({ bogusFacet: ['a'], anotherBogus: ['b'] });
+      store.sanitiseFilters({ anotherBogus: ['b'] });
+
+      expect(console.warn).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(console.warn).mock.calls[0]?.[0]).toContain('bogusFacet');
+      expect(vi.mocked(console.warn).mock.calls[1]?.[0]).toContain('anotherBogus');
     });
   });
 

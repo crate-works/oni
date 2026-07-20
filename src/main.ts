@@ -69,7 +69,9 @@ app.provide('api', api);
 
 // Fire-and-forget: the app renders immediately and the store reactively
 // updates when the capabilities fetch settles. Fetched once per session.
-void useCapabilitiesStore().init(api);
+const capabilitiesStore = useCapabilitiesStore();
+void capabilitiesStore.init(api);
+api.setFilterSanitiser(capabilitiesStore.sanitiseFilters);
 
 const i18nStore = useI18nStore();
 i18nStore.initializeLocale();

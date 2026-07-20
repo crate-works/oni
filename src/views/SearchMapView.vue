@@ -36,7 +36,6 @@ const {
   errorDialogText,
 
   onInputChange,
-  requestFilters,
   updateRoutes,
   updateFilter,
   filtersChanged,
@@ -278,7 +277,7 @@ const searchGeoHash = async ({ geohash, pageSize }: { geohash: string; pageSize:
     // FIXME: advanced search
     query: advancedSearchEnabled.value ? '' : searchInput.value.toString(),
     searchType: advancedSearchEnabled.value ? 'advanced' : 'basic',
-    filters: requestFilters(),
+    filters: filters.value,
     limit: pageSize,
     offset: (currentPage.value - 1) * pageSize,
     sort: selectedSorting.value?.value,

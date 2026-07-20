@@ -5,6 +5,7 @@ import { api } from '@/configuration';
 import { parseContentSize } from '@/lib/tools';
 import { forceRenewToken, getValidAccessToken } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
+import { useCapabilitiesStore } from '@/stores/capabilities';
 
 // TODO: use zod to validate the response we get back
 
@@ -200,12 +201,14 @@ export class ApiService {
   #clientId: string | undefined;
   #usesRedirects: boolean | undefined;
   #store: ReturnType<typeof useAuthStore>;
+  #capabilities: ReturnType<typeof useCapabilitiesStore>;
 
   constructor() {
     const { endpoint, usesRedirects } = api.rocrate;
     this.#apiUri = `${endpoint}`;
     this.#clientId = api.oidc?.clientId;
     this.#store = useAuthStore();
+    this.#capabilities = useCapabilitiesStore();
     this.#usesRedirects = usesRedirects;
   }
 
@@ -221,18 +224,12 @@ export class ApiService {
     return files;
   }
 
-  // Sanitises filters on every search so no caller can send keys the API
-  // rejects with a 400. The default passthrough covers requests before
+  // Filters are sanitised at the API seam so no caller can send keys the API
+  // rejects with a 400; the store passes them through untouched until
   // capabilities has loaded.
-  #sanitiseFilters: (filters: Filters) => Filters = (filters) => filters;
-
-  setFilterSanitiser(sanitise: (filters: Filters) => Filters) {
-    this.#sanitiseFilters = sanitise;
-  }
-
   async search(params: SearchParams) {
     if (params.filters) {
-      params = { ...params, filters: this.#sanitiseFilters(params.filters) };
+      params = { ...params, filters: this.#capabilities.sanitiseFilters(params.filters) };
     }
 
     const response = await this.#post<GetSearchResponse>('/search', params as unknown as Record<string, string>);

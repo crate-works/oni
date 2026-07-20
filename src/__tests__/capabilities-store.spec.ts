@@ -26,13 +26,15 @@ const fail = async (store: ReturnType<typeof useCapabilitiesStore>) => {
   );
 };
 
-describe('capabilities store', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-    vi.restoreAllMocks();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
+beforeEach(() => {
+  setActivePinia(createPinia());
+  vi.restoreAllMocks();
+  vi.clearAllMocks();
+  ui.aggregations = [];
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+});
 
+describe('capabilities store', () => {
   it('starts pending', () => {
     const store = useCapabilitiesStore();
 
@@ -77,12 +79,6 @@ describe('capabilities store', () => {
 });
 
 describe('capabilities store getters', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-    vi.restoreAllMocks();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
-
   describe('hasExtension', () => {
     it('is false while pending', () => {
       expect(useCapabilitiesStore().hasExtension('segments')).toBe(false);
@@ -185,13 +181,6 @@ describe('capabilities store getters', () => {
 });
 
 describe('capabilities store facet mismatch check', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-    vi.clearAllMocks();
-    ui.aggregations = [];
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
-
   it('records configured facets the API does not declare and shows the banner', async () => {
     ui.aggregations = [aggregation('inLanguage'), aggregation('bogusFacet')];
     const store = useCapabilitiesStore();
@@ -243,5 +232,62 @@ describe('capabilities store facet mismatch check', () => {
 
     expect(store.unsupportedFacets).toEqual([]);
     expect(captureMessage).not.toHaveBeenCalled();
+  });
+
+  it('skips the check when aggregations are not configured', async () => {
+    ui.aggregations = undefined;
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.unsupportedFacets).toEqual([]);
+    expect(store.showBanner).toBe(false);
+  });
+});
+
+describe('capabilities store facetConfig', () => {
+  beforeEach(() => {
+    ui.aggregations = undefined;
+  });
+
+  it('returns configured aggregations verbatim when the configuration declares them', async () => {
+    ui.aggregations = [aggregation('inLanguage')];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.facetConfig).toEqual([aggregation('inLanguage')]);
+  });
+
+  it('honours a deliberately empty configured list even once capabilities loads', async () => {
+    ui.aggregations = [];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.facetConfig).toEqual([]);
+  });
+
+  it('derives facets from capabilities when aggregations are not configured', async () => {
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.facetConfig).toEqual([
+      { name: 'inLanguage', display: 'Language' },
+      { name: 'mediaType', display: 'Media Type' },
+    ]);
+  });
+
+  it('is empty while pending when aggregations are not configured', () => {
+    expect(useCapabilitiesStore().facetConfig).toEqual([]);
+  });
+
+  it('is empty when capabilities failed and aggregations are not configured', async () => {
+    const store = useCapabilitiesStore();
+
+    await fail(store);
+
+    expect(store.facetConfig).toEqual([]);
   });
 });

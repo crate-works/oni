@@ -9,7 +9,8 @@ import {
   parseCapabilities,
   stripUnsupportedFilters,
 } from '@/capabilities';
-import { ui } from '@/configuration';
+import { type AggregationInput, ui } from '@/configuration';
+import { startCase } from '@/lib/metadata';
 import type { ApiService } from '@/services/api';
 
 // Session-scoped feature detection against the archive's GET /capabilities
@@ -24,7 +25,22 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
   // Empty while pending or failed — the mismatch check only judges a loaded
   // response; in the failed state the banner already covers non-conformance.
   const unsupportedFacets = computed(() =>
-    capabilities.value ? findUnsupportedFacets(ui.aggregations, capabilities.value.search.facets) : [],
+    capabilities.value ? findUnsupportedFacets(ui.aggregations ?? [], capabilities.value.search.facets) : [],
+  );
+
+  // The facet definitions driving the search UI. Configured aggregations win —
+  // curation, renaming, reordering and date_histogram facets stay possible —
+  // otherwise every facet the archive declares is shown under its capability
+  // label (falling back to the start-cased field name), in declaration order.
+  // Empty until capabilities loads (and stays empty on failure) when nothing
+  // is configured.
+  const facetConfig = computed<AggregationInput[]>(
+    () =>
+      ui.aggregations ??
+      Object.entries(capabilities.value?.search.facets ?? {}).map(([name, { label }]) => ({
+        name,
+        display: label ?? startCase(name),
+      })),
   );
 
   const init = async (api: ApiService) => {
@@ -86,5 +102,15 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
 
   const showBanner = computed(() => failed.value || unsupportedFacets.value.length > 0);
 
-  return { status, capabilities, unsupportedFacets, init, hasExtension, supportedFilters, sanitiseFilters, showBanner };
+  return {
+    status,
+    capabilities,
+    unsupportedFacets,
+    facetConfig,
+    init,
+    hasExtension,
+    supportedFilters,
+    sanitiseFilters,
+    showBanner,
+  };
 });

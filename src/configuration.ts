@@ -130,6 +130,18 @@ const mapSchema = z.strictObject({
   zoom: z.number().default(defaultZoom),
 });
 
+const aggregationSchema = z.strictObject({
+  display: z.string(),
+  name: z.string(),
+  help: z.string().optional(),
+  type: z.enum(['standard', 'date_histogram']).optional().default('standard'),
+  active: z.boolean().optional().default(false),
+});
+
+// Facet definitions as authored: type and active may be omitted — consumers
+// treat absence as a standard, collapsed facet.
+export type AggregationInput = z.input<typeof aggregationSchema>;
+
 const citeData = z.strictObject({
   help: z.strictObject({
     text: z.string(),
@@ -199,15 +211,10 @@ const uiSchema = z.strictObject({
   collection: collectionSchema,
   object: objectSchema,
   file: fileSchema,
-  aggregations: z.array(
-    z.strictObject({
-      display: z.string(),
-      name: z.string(),
-      help: z.string().optional(),
-      type: z.enum(['standard', 'date_histogram']).optional().default('standard'),
-      active: z.boolean().optional().default(false),
-    }),
-  ),
+  // Omitted entirely means "show every facet the API declares in GET
+  // /capabilities"; an empty array means "show no facets". Configure only to
+  // curate, rename, reorder, or use date_histogram facets.
+  aggregations: z.array(aggregationSchema).optional(),
   searchFields: z.record(z.string(), z.string()),
   analytics: z
     .strictObject({

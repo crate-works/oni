@@ -1,8 +1,10 @@
 import { useGtm } from '@gtm-support/vue-gtm';
 import { inject, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import type { Filters } from '@/capabilities';
 import { defaultPageSize, ui } from '@/configuration';
 import type { ApiService, EntityType, GetSearchResponse, SearchParams } from '@/services/api';
+import { useCapabilitiesStore } from '@/stores/capabilities';
 
 const { mapConfig, searchFields } = ui;
 
@@ -96,11 +98,13 @@ export const useSearch = (searchType: 'list' | 'map') => {
 
   const isMap = searchType === 'map';
 
+  const capabilitiesStore = useCapabilitiesStore();
+
   // Search state
   const searchInput = ref('');
   const advancedSearchLines = ref<AdvancedSearchLine[]>([{ ...blankAdvancedSearchLine }]);
   const advancedSearchEnabled = ref(false);
-  const filters = ref<Record<string, string[]>>({});
+  const filters = ref<Filters>({});
 
   // Pagination
   const pageSize = ref(defaultPageSize);
@@ -151,7 +155,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
     filters.value = {};
 
     if (route.query.f) {
-      const filterQuery = JSON.parse(decodeURIComponent(route.query.f.toString())) as Record<string, string[]>;
+      const filterQuery = JSON.parse(decodeURIComponent(route.query.f.toString())) as Filters;
       for (const [key, val] of Object.entries(filterQuery)) {
         filters.value[key] = val;
         if (filters.value[key].length === 0) {
@@ -287,7 +291,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
       }
 
       if (results.facets) {
-        facets.value = populateFacets(results.facets);
+        rawFacets.value = results.facets;
       }
 
       geohashGrid.value = results.geohashGrid;
@@ -354,9 +358,23 @@ export const useSearch = (searchType: 'list' | 'map') => {
     return hierarchicalBuckets;
   };
 
+  // The facet panel derives from the last search response plus the facet
+  // definitions, which can change after the response lands: when
+  // ui.aggregations is not configured they come from GET /capabilities, which
+  // loads in parallel with the first search. This watch is the only writer of
+  // facets; populateFacets isn't a pure derivation because it preserves each
+  // facet's expanded state across searches.
+  const rawFacets = ref<GetSearchResponse['facets']>();
+
+  watch([rawFacets, () => capabilitiesStore.facetConfig], () => {
+    if (rawFacets.value) {
+      facets.value = populateFacets(rawFacets.value);
+    }
+  });
+
   const populateFacets = (newFacets: GetSearchResponse['facets']) => {
     const a: FacetType[] = [];
-    const aggInfo = ui.aggregations;
+    const aggInfo = capabilitiesStore.facetConfig;
 
     for (const facet of Object.keys(newFacets)) {
       const order = aggInfo.findIndex((a) => a.name === facet);
@@ -372,7 +390,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
       const type = info.type;
       const hasSelectedValues = !!filters.value[facet] && filters.value[facet].length > 0;
       const existingFacet = facets.value?.find((f) => f.name === name);
-      const active = hasSelectedValues || existingFacet?.active || info.active;
+      const active = Boolean(hasSelectedValues || existingFacet?.active || info.active);
 
       // biome-ignore lint/style/noNonNullAssertion: impossible for it to not exist
       const rawBuckets = newFacets[facet]!;

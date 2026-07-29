@@ -1,18 +1,21 @@
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import type { CollectionConfig, ObjectConfig } from '@/configuration';
+import type { CollectionConfig, FileConfig, ObjectConfig } from '@/configuration';
 import type { RoCrate } from '@/services/api';
 import { first } from '@/tools';
 
-export function useEntityView(config: CollectionConfig | ObjectConfig) {
+export function useEntityView(config: CollectionConfig | ObjectConfig | FileConfig) {
   const router = useRouter();
   const route = useRoute();
 
   const name = ref<string>('');
   const meta = ref<{ name: string; data: RoCrate[keyof RoCrate] }[]>([]);
 
-  const populateName = (md: RoCrate) => {
-    name.value = first(md.name) || '';
+  const populateName = (md: RoCrate, fallback?: string | string[]) => {
+    const primaryName = first(md.name);
+    const fallbackName = fallback ? first(fallback) : '';
+
+    name.value = primaryName || fallbackName || '';
   };
 
   const isEmpty = (value: object | string | undefined): boolean => {

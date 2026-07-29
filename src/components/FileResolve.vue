@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import AccessHelper from '@/components/AccessHelper.vue';
 import CSVWidget from '@/components/widgets/CSVWidget.vue';
 import EafTranscriptionWidget from '@/components/widgets/EafTranscriptionWidget.vue';
@@ -26,7 +26,6 @@ const {
 }>();
 
 const data = ref();
-const downloadUrl = ref('');
 const streamUrl = ref('');
 const annotationUrls = ref<string[]>([]);
 const currentTime = ref<number>(0);
@@ -34,7 +33,7 @@ const mediaDuration = ref<number>(0);
 const mediaRef = ref<HTMLAudioElement | HTMLVideoElement | null>(null);
 const fileVisibility = resolveFileVisibilityConfig(ui.presentation?.fileVisibilityField);
 const shouldDisplayFile = isFileVisibleByMetadata(metadata as unknown as Record<string, unknown>, fileVisibility);
-
+const filename = computed(() => first(metadata.filename) || entity.id.split('/').pop() || 'file');
 const resolveFile = async () => {
   if (!shouldDisplayFile) {
     return;
@@ -43,9 +42,7 @@ const resolveFile = async () => {
   if (entity.entityType !== 'http://schema.org/MediaObject') {
     return;
   }
-  const filename = metadata.filename || entity.id.split('/').pop();
-  streamUrl.value = (await api.getFileUrl(entity.id, first(filename), false)) || '';
-  downloadUrl.value = (await api.getFileUrl(entity.id, first(filename), true)) || '';
+  streamUrl.value = (await api.getFileUrl(entity.id, filename.value, false)) || '';
 };
 
 const resolveAnnotations = async () => {
@@ -81,7 +78,7 @@ const handleDownload = async () => {
     return;
   }
 
-  const url = await api.getFileUrl(entity.id, first(metadata.filename), true);
+  const url = await api.getFileUrl(entity.id, filename.value, true);
   if (url) {
     window.location.href = url;
   }
@@ -225,7 +222,7 @@ onMounted(async () => {
 
     <el-row class="flex justify-center" v-if="shouldDisplayFile && entity.access.content && entity.entityType === 'http://schema.org/MediaObject'">
       <el-button-group class="m-2">
-        <el-button type="default" tag="a" :href="downloadUrl" >Download File&nbsp;<font-awesome-icon icon="fa fa-download" /></el-button>
+        <el-button type="default" @click="handleDownload">Download File&nbsp;<font-awesome-icon icon="fa fa-download" /></el-button>
       </el-button-group>
     </el-row>
   </el-col>

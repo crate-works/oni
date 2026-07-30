@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import FileResolve from '@/components/FileResolve.vue';
 import MetaField from '@/components/MetaField.vue';
+import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
 import type { AnnotationRef, ApiService, EntityType, RoCrate } from '@/services/api';
-import { first, getEntityUrl } from '@/tools';
+import { getEntityUrl } from '@/tools';
 
 const api = inject<ApiService>('api');
 if (!api) {
@@ -13,32 +14,26 @@ if (!api) {
 }
 
 const route = useRoute();
-const router = useRouter();
+
+const { name, meta, populateName, populateMeta, handleMissingEntity } = useEntityView(ui.file);
 
 type FileRoCrate = RoCrate['hasPart'][number];
 
 const id = route.query.id?.toString() as string;
 
-const title = ref('');
 const parentTitle = ref<string>();
 const parentUrl = ref<string>();
 const metadata = ref<FileRoCrate | undefined>();
 const entity = ref<EntityType | undefined>();
-const meta = ref<{ name: string; data: string }[]>([]);
 const annotations = ref<AnnotationRef[]>([]);
 const isLoading = ref(true);
 
 const populateData = (md: FileRoCrate, e: EntityType) => {
-  title.value = first(md.filename) || md['@id'];
+  populateName(md as unknown as RoCrate, md['@id']);
 
   parentTitle.value = e.memberOf?.name || e.memberOf?.id;
 
-  const keys = Object.keys(md);
-  const filtered = keys.filter((key) => !ui.file.meta.hide.includes(key));
-  for (const filter of filtered) {
-    meta.value.push({ name: filter, data: md[filter as keyof typeof md] as string });
-  }
-  meta.value.sort((a, b) => a.name.localeCompare(b.name));
+  populateMeta(md as unknown as RoCrate);
 
   // Extract annotation references
   if (md.hasAnnotation) {
@@ -51,12 +46,7 @@ const populateData = (md: FileRoCrate, e: EntityType) => {
 
 const getFileMetadata = async () => {
   if (!id) {
-    router.replace({
-      name: 'NotFound',
-      params: { pathMatch: route.path.substring(1).split('/') },
-      query: route.query,
-      hash: route.hash,
-    });
+    handleMissingEntity();
 
     return;
   }
@@ -64,12 +54,7 @@ const getFileMetadata = async () => {
   try {
     const { entity: fileEntity, metadata: md } = await api.getEntity(id);
     if (!md) {
-      router.replace({
-        name: 'NotFound',
-        params: { pathMatch: route.path.substring(1).split('/') },
-        query: route.query,
-        hash: route.hash,
-      });
+      handleMissingEntity();
 
       return;
     }
@@ -117,7 +102,7 @@ getFileMetadata();
                 <font-awesome-icon icon="fa fa-arrow-left" />
                 {{ parentTitle }}
               </router-link>
-              >&nbsp;<span>{{ title || id }}</span>
+              >&nbsp;<span>{{ name || id }}</span>
             </h3>
           </el-col>
         </el-row>

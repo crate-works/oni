@@ -86,10 +86,11 @@ export type CollectionConfig = z.infer<typeof collectionSchema>;
 export type ObjectConfig = z.infer<typeof objectSchema>;
 
 const fileSchema = z.strictObject({
-  meta: z.strictObject({
-    hide: z.array(z.string()),
-  }),
+  meta: metaSchema,
+  memberSort: z.string().optional().default('name'),
 });
+
+export type FileConfig = z.infer<typeof fileSchema>;
 
 const splashSchema = z.strictObject({
   text: z.string(),

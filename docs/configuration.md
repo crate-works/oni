@@ -461,6 +461,7 @@ Configure which fields can be used for faceted filtering in search results.
 | `ui.aggregations[].display` | string | Yes | Display name for the facet |
 | `ui.aggregations[].name` | string | Yes | Field name to aggregate on |
 | `ui.aggregations[].help` | string | No | Help text for the facet |
+| `ui.aggregations[].active` | boolean | No | Whether the facet is expanded by default when first rendered. |
 | `ui.aggregations[].type` | string | No | Aggregation type (e.g., "date_histogram" for hierarchical date facets) |
 
 **Facet Types:**

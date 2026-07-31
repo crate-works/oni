@@ -86,10 +86,11 @@ export type CollectionConfig = z.infer<typeof collectionSchema>;
 export type ObjectConfig = z.infer<typeof objectSchema>;
 
 const fileSchema = z.strictObject({
-  meta: z.strictObject({
-    hide: z.array(z.string()),
-  }),
+  meta: metaSchema,
+  memberSort: z.string().optional().default('name'),
 });
+
+export type FileConfig = z.infer<typeof fileSchema>;
 
 const splashSchema = z.strictObject({
   text: z.string(),
@@ -192,6 +193,7 @@ const uiSchema = z.strictObject({
       name: z.string(),
       help: z.string().optional(),
       type: z.enum(['standard', 'date_histogram']).optional().default('standard'),
+      active: z.boolean().optional().default(false),
     }),
   ),
   searchFields: z.record(z.string(), z.string()),

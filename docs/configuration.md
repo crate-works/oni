@@ -757,9 +757,10 @@ Configure the page size options available across all paginated views (search res
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `api.rocrate.endpoint` | URL | Yes | Base URL of the RO-Crate API endpoint |
-| `api.rocrate.path` | string | Yes | Path to the API (appended to endpoint) |
-| `api.rocrate.clientId` | string | No | OAuth client ID for authentication |
 | `api.rocrate.usesRedirects` | boolean | No | Whether the API uses redirects |
+| `api.oidc.endpoint` | URL | No | Base URL of the OIDC authentication endpoint |
+| `api.oidc.clientId` | string | No | OIDC client ID for authentication |
+| `api.oidc.scope` | string | No | OIDC scope |
 
 **Example:**
 
@@ -768,9 +769,12 @@ Configure the page size options available across all paginated views (search res
   "api": {
     "rocrate": {
       "endpoint": "https://catalog.example.com",
-      "path": "/api/v1/oni",
-      "clientId": "your-client-id",
       "usesRedirects": false
+    },
+    "oidc": {
+      "clientId": "your-client-id",
+      "endpoint": "https://auth.example.com",
+      "scope": "openid profile email"
     }
   }
 }

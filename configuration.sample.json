@@ -365,9 +365,12 @@
   },
   "api": {
     "rocrate": {
+      "endpoint": "http://localhost:8080/api"
+    },
+    "oidc": {
       "endpoint": "http://localhost:8080",
-      "path": "/api",
-      "clientId": "REPLACE_ME"
+      "clientId": "REPLACE_ME",
+      "scope": "openid profile email"
     }
   }
 }

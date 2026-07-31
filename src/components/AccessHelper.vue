@@ -64,7 +64,7 @@ const localLicense = license?.[0] || { '@id': 'missing', name: ['Missing'] as st
 
         <template v-if="access.contentAuthorizationUrl">
           <el-row class="mt-4">
-            <el-link underline="always" :href="access.metadataAuthorizationUrl" target="_blank">
+            <el-link underline="always" :href="access.contentAuthorizationUrl" target="_blank">
               {{ t('access.applyForAccess') }} <font-awesome-icon icon="fa-solid fa-arrow-up-right-from-square" />
             </el-link>
           </el-row>

@@ -63,6 +63,28 @@ Create separate files for each locale you want to extend:
 - `public/i18n/fr.json` - French extensions
 - `public/i18n/es.json` - Spanish extensions
 
+### Custom Locales
+
+To use a custom locale code such as `ymen`, add a translation file at `public/i18n/ymen.json`.
+Then update `configuration.json` so the app knows that `ymen` is an allowed locale and the default locale:
+
+```json
+{
+  "ui": {
+    "i18n": {
+      "availableLocales": ["ymen"],
+      "defaultLocale": "ymen"
+    }
+  }
+}
+```
+
+If you only want to show one language in the UI, set `availableLocales` to just that locale code.
+The language switcher only renders the locales listed in `availableLocales`.
+
+If you want runtime overrides only, keep the file in `public/i18n/ymen.json`.
+If you want the locale to exist in the built-in bundle as well, add `src/i18n/locales/ymen.json` too.
+
 ## Important Notes
 
 - Runtime locale files are optional - the app works fine without them

@@ -144,6 +144,12 @@ const paginationSchema = z
   .optional()
   .default({ pageSizes: [...defaultPageSizes] });
 
+const localeCodeSchema = z
+  .string()
+  .trim()
+  .min(2)
+  .regex(/^[a-z][a-z0-9-]*$/i, 'locale code must start with a letter and contain only letters, numbers, or hyphens');
+
 const uiSchema = z.strictObject({
   urlPrefix: z.string().startsWith('/').optional().default(''),
   management: z
@@ -229,8 +235,12 @@ const uiSchema = z.strictObject({
   pagination: paginationSchema,
   i18n: z
     .strictObject({
-      availableLocales: z.array(z.enum(['en', 'de', 'fr', 'es'])).default(['en']),
-      defaultLocale: z.enum(['en', 'de', 'fr', 'es']).default('en'),
+      availableLocales: z.array(localeCodeSchema).nonempty().default(['en']),
+      defaultLocale: localeCodeSchema.default('en'),
+    })
+    .refine((data) => data.availableLocales.includes(data.defaultLocale), {
+      message: 'defaultLocale must be one of availableLocales',
+      path: ['defaultLocale'],
     })
     .optional()
     .default({ availableLocales: ['en'], defaultLocale: 'en' }),

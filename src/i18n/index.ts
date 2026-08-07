@@ -5,20 +5,18 @@ import { ui } from '@/configuration';
 
 const { urlPrefix = '' } = ui;
 
-import deMessages from '@/i18n/locales/de.json';
-import enMessages from '@/i18n/locales/en.json';
-import esMessages from '@/i18n/locales/es.json';
-import frMessages from '@/i18n/locales/fr.json';
-
-type Locale = 'en' | 'de' | 'fr' | 'es';
+type Locale = string;
 type Messages = Record<string, Record<string, string>>;
 
-const builtInMessages: Record<Locale, Messages> = {
-  en: enMessages,
-  de: deMessages,
-  fr: frMessages,
-  es: esMessages,
-};
+const localeModules = import.meta.glob<{ default: Messages }>('./locales/*.json', { eager: true });
+const builtInMessages = Object.entries(localeModules).reduce<Record<string, Messages>>((acc, [path, mod]) => {
+  const locale = path.split('/').pop()?.replace('.json', '');
+  if (locale) {
+    acc[locale] = mod.default;
+  }
+
+  return acc;
+}, {});
 
 const localeMerge = (target: Messages, source: Messages): Messages => {
   const result = { ...target };
@@ -53,13 +51,14 @@ const loadRuntimeLocale = async (locale: Locale): Promise<Messages | null> => {
 };
 
 // Load and merge all locale messages (built-in + runtime)
-const loadMessages = async (): Promise<Record<Locale, Messages>> => {
-  const messages: Record<Locale, Messages> = { ...builtInMessages };
-  const locales: Locale[] = ['en', 'de', 'fr', 'es'];
+const loadMessages = async (locales: Locale[]): Promise<Record<string, Messages>> => {
+  const messages: Record<string, Messages> = {};
 
-  // Load runtime locales and merge with built-in
+  // Load configured locales and merge runtime overrides on top.
   await Promise.all(
     locales.map(async (locale) => {
+      messages[locale] = builtInMessages[locale] || {};
+
       const runtimeMessages = await loadRuntimeLocale(locale);
 
       if (runtimeMessages) {
@@ -73,12 +72,15 @@ const loadMessages = async (): Promise<Record<Locale, Messages>> => {
 
 // Create and configure i18n instance
 export const setupI18n = async (locale: Locale = 'en'): Promise<I18n> => {
-  const messages = await loadMessages();
+  const configuredLocales = ui.i18n?.availableLocales ?? ['en'];
+  const messages = await loadMessages(configuredLocales);
+  const fallbackLocale = messages[ui.i18n.defaultLocale] ? ui.i18n.defaultLocale : configuredLocales[0] || 'en';
+  const initialLocale = messages[locale] ? locale : fallbackLocale;
 
   const options: I18nOptions = {
     legacy: false,
-    locale,
-    fallbackLocale: 'en',
+    locale: initialLocale,
+    fallbackLocale,
     messages,
   };
 

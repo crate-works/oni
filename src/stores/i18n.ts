@@ -2,12 +2,12 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { ui } from '@/configuration';
 
-type Locale = 'en' | 'de' | 'fr' | 'es';
+type Locale = string;
 
 export const useI18nStore = defineStore(
   'i18n',
   () => {
-    const currentLocale = ref<Locale>('en');
+    const currentLocale = ref<Locale>(ui.i18n?.defaultLocale ?? 'en');
     const availableLocales = computed<Locale[]>(() => {
       return ui.i18n?.availableLocales ?? ['en'];
     });
@@ -30,9 +30,8 @@ export const useI18nStore = defineStore(
     };
 
     const initializeLocale = () => {
-      // Check if locale is already persisted
-      if (!currentLocale.value || currentLocale.value === 'en') {
-        // No persisted locale, detect browser language
+      // If a persisted locale is invalid for current config, recover gracefully.
+      if (!availableLocales.value.includes(currentLocale.value)) {
         const detectedLocale = detectBrowserLocale();
         setLocale(detectedLocale);
       }

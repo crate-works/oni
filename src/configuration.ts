@@ -179,6 +179,7 @@ const uiSchema = z.strictObject({
     expand: z.array(z.string()),
     paginatedMeta: z.array(z.string()).optional().default([]),
   }),
+  metadataMapping: z.strictObject({ mappingFile: z.string().optional() }).optional(),
   textReplacements: z.record(z.string(), z.string()).optional().default({}),
   head: z.strictObject({
     title: z.string(),

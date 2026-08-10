@@ -106,27 +106,137 @@ export const first = <T>(arr: T | T[]) => {
   return arr[0] as T;
 };
 
+// If metadataMapping exists, use the mapping file to map metadata fields to display names, using the "@id" or "rdfs:label" and "name" fields. Otherwise, use the textReplacements mapping.
+const metadataMapping = ui.metadataMapping;
 const textReplacements = ui.textReplacements;
+
+type MetadataGraphNode = {
+  'rdfs:label'?: unknown;
+  '@id'?: unknown;
+  name?: unknown;
+};
+
+type MetadataMappingFile = {
+  '@graph'?: unknown;
+};
+
+const getMetadataName = (name: unknown): string | null => {
+  if (typeof name === 'string' && name.trim()) {
+    return name;
+  }
+
+  if (Array.isArray(name)) {
+    const firstName = name.find((value) => typeof value === 'string' && value.trim());
+    return typeof firstName === 'string' ? firstName : null;
+  }
+
+  return null;
+};
+
+const isAbsoluteUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
+
+const getMappingFileCandidates = (mappingFile: string) => {
+  const candidates = new Set<string>([mappingFile]);
+
+  if (!isAbsoluteUrl(mappingFile)) {
+    if (!mappingFile.startsWith('/')) {
+      candidates.add(`/${mappingFile}`);
+    }
+
+    if (ui.urlPrefix) {
+      const normalizedPrefix = ui.urlPrefix.endsWith('/') ? ui.urlPrefix.slice(0, -1) : ui.urlPrefix;
+      const normalizedPath = mappingFile.startsWith('/') ? mappingFile : `/${mappingFile}`;
+      candidates.add(`${normalizedPrefix}${normalizedPath}`);
+    }
+  }
+
+  return Array.from(candidates);
+};
+
+const loadMetadataMapping = async () => {
+  const mappingFile = metadataMapping?.mappingFile;
+  if (!mappingFile) {
+    return new Map<string, string>();
+  }
+
+  for (const path of getMappingFileCandidates(mappingFile)) {
+    try {
+      const response = await fetch(path);
+      if (!response.ok) {
+        continue;
+      }
+
+      const payload = (await response.json()) as MetadataMappingFile;
+      const graph = Array.isArray(payload['@graph']) ? payload['@graph'] : [];
+      const mapping = new Map<string, string>();
+
+      for (const node of graph) {
+        if (!node || typeof node !== 'object') {
+          continue;
+        }
+
+        const graphNode = node as MetadataGraphNode;
+        const idFromLabel = getMetadataName(graphNode['rdfs:label']);
+        const idFromId = getMetadataName(graphNode['@id']);
+        const name = getMetadataName(graphNode.name);
+
+        if (name) {
+          if (idFromLabel) {
+            mapping.set(idFromLabel, name);
+          }
+
+          if (idFromId) {
+            mapping.set(idFromId, name);
+          }
+        }
+      }
+
+      return mapping;
+    } catch {
+      // Continue trying fallback paths if available.
+    }
+  }
+
+  return new Map<string, string>();
+};
+
+const metadataNameById = await loadMetadataMapping();
 
 export const startCase = (str: string) => {
   if (typeof str !== 'string' || !str) {
     return '';
   }
 
+  if (metadataMapping) {
+    const mappedName = metadataNameById.get(str);
+    if (mappedName) {
+      return mappedName;
+    }
+  }
+
   let words = str;
 
-  for (const [pattern, replacement] of Object.entries(textReplacements)) {
-    const regex = new RegExp(pattern, 'g');
-    words = words.replace(regex, replacement);
+  if (!metadataMapping) {
+    for (const [pattern, replacement] of Object.entries(textReplacements)) {
+      const regex = new RegExp(pattern, 'g');
+      words = words.replace(regex, replacement);
+    }
   }
 
   words = words
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .split(/[^a-zA-Z0-9]+/)
+    .replace(/([\p{Ll}\p{N}])([\p{Lu}])/gu, '$1 $2')
+    .split(/[^\p{L}\p{N}]+/u)
     .filter((word) => word.length > 0)
     .map((word) => {
-      // NOTE: Don't change the case of words that are in the replacements list
-      if (Object.values(textReplacements).includes(word)) {
+      // NOTE: Don't change the case of words that are in the replacements list.
+      if (!metadataMapping && Object.values(textReplacements).includes(word)) {
         return word;
       }
 

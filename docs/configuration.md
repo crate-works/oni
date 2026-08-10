@@ -338,6 +338,22 @@ The following routes are available for use in navigation items:
 }
 ```
 
+### Metadata Mapping
+
+If `ui.metadataMapping.mappingFile` is provided, the portal will load the JSON file or URL as an RO-Crate document to map metadata fields to display names. The mapping file should be a valid RO-Crate (containing an `@graph` array), and each mapping entity in that graph should provide an `@id` (or `rdfs:label`) plus a `name` field. If not used, the portal will fall back to using `ui.textReplacements` for display name mapping. See [ro-crate-masp](https://github.com/Language-Research-Technology/ro-crate-masp) for more information about the RO-Crate mapping format.
+
+***Example:**
+
+```json
+{
+  "ui": {
+    "metadataMapping": {
+      "mappingFile": "ro-crate-metadata.json"
+    }
+  }
+}
+```
+
 ### Text Replacements
 
 Text replacements allow you to customise how field names are displayed throughout the interface using regular expressions.

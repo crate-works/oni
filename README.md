@@ -135,7 +135,7 @@ configuration mount point, nginx customisation, and health-check details.
 
 ## Contributing
 
-- Follow **Conventional Commits** — enforced on every commit by commitlint.
+- Follow [**Conventional Commits**](https://www.conventionalcommits.org) — enforced on every commit by commitlint.
 - Pre-commit hooks must pass. If they fail, fix the cause rather than
   skipping them.
 - Prefer **Australian English** in user-facing strings (colour, organise,

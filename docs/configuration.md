@@ -410,7 +410,33 @@ In explicit mode, you explicitly list all fields to show.
 
 #### File Metadata
 
-File metadata only supports hiding specific fields.
+File metadata supports both `filter` and `explicit` modes, the same as collection and object metadata.
+
+In `filter` mode, you can define `top` and `hide` fields. For backward compatibility, `mode` and `top` are optional for file metadata:
+
+- If `mode` is omitted, it defaults to `filter`
+- If `top` is omitted, it defaults to `[]`
+
+**Filter mode example:**
+
+```json
+{
+  "ui": {
+    "file": {
+      "meta": {
+        "mode": "filter",
+        "top": [
+          { "display": "Name", "name": "name" },
+          { "display": "Description", "name": "description" }
+        ],
+        "hide": ["@type", "id", "_access"]
+      }
+    }
+  }
+}
+```
+
+**Backward-compatible filter example (legacy shape):**
 
 ```json
 {
@@ -418,6 +444,23 @@ File metadata only supports hiding specific fields.
     "file": {
       "meta": {
         "hide": ["@type", "id", "_access"]
+      }
+    }
+  }
+}
+```
+
+In `explicit` mode, only fields listed in `show` are displayed.
+
+**Explicit mode example:**
+
+```json
+{
+  "ui": {
+    "file": {
+      "meta": {
+        "mode": "explicit",
+        "show": ["name", "description", "encodingFormat", "contentSize"]
       }
     }
   }

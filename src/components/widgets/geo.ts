@@ -1,4 +1,4 @@
-import { first } from '@/tools';
+import { first } from '@/lib/tools';
 import { GeoCoordinates, GeoShape } from './geo_schema';
 import type { GeoEntity, LType } from './geo_types';
 import { Geometry } from './geo_wkt';

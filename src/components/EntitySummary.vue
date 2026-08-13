@@ -4,8 +4,8 @@ import MediaTypeIcon from '@/components//widgets/MediaTypeIcon.vue';
 import AccessControlIcon from '@/components/widgets/AccessControlIcon.vue';
 import CommunicationModeIcon from '@/components/widgets/CommunicationModeIcon.vue';
 import { ui } from '@/configuration';
+import { getEntityUrl } from '@/lib/tools';
 import type { EntityType } from '@/services/api';
-import { getEntityUrl } from '@/tools';
 
 const { t } = useI18n();
 const { entity } = defineProps<{ entity: EntityType }>();

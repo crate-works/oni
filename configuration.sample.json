@@ -222,22 +222,25 @@
         "text": "See this <span style=\"display: inline-flex; align-items: center;\"><a class=\"el-link el-link--primary\" target=\"_blank\" href=\"https://www.ldaca.edu.au/resources/user-guides/portal/cite-data/\">help</a></span> page for more detail."
       }
     },
-    "textReplacements": {
-      "^_": "",
-      "^ldac:doi$": "DOI",
-      "^ldac:isDeIdentified$": "Is De-Identified",
-      "^citation$": "Related Works",
-      "^ldac:": "",
-      "^dct:": "",
-      "^local:": "",
-      "^prov:": "",
-      "^pcdm:": "",
-      "^isbn$": "ISBN",
-      "^issn$": "ISSN",
-      "^url$": "URL",
-      "^@id$": "ID",
-      "^@type$": "Type",
-      "^arcp://name,custom/terms#": ""
+    "metadataMapping": {
+      "mappingFile": "ro-crate-metadata.json",
+      "textReplacements": {
+        "^_": "",
+        "^ldac:doi$": "DOI",
+        "^ldac:isDeIdentified$": "Is De-Identified",
+        "^citation$": "Related Works",
+        "^ldac:": "",
+        "^dct:": "",
+        "^local:": "",
+        "^prov:": "",
+        "^pcdm:": "",
+        "^isbn$": "ISBN",
+        "^issn$": "ISSN",
+        "^url$": "URL",
+        "^@id$": "ID",
+        "^@type$": "Type",
+        "^arcp://name,custom/terms#": ""
+      }
     },
     "head": {
       "title": "DC.publisher",

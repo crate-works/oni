@@ -5,8 +5,8 @@ import FileResolve from '@/components/FileResolve.vue';
 import MetaField from '@/components/MetaField.vue';
 import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
+import { getEntityUrl } from '@/lib/tools';
 import type { AnnotationRef, ApiService, EntityType, RoCrate } from '@/services/api';
-import { getEntityUrl } from '@/tools';
 
 const api = inject<ApiService>('api');
 if (!api) {

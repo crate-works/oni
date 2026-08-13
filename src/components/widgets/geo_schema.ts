@@ -1,5 +1,5 @@
 import type { GeoCoordinates as GeoCoordinatesType, GeoShape as GeoShapeType } from 'schema-dts';
-import { first } from '@/tools';
+import { first } from '@/lib/tools';
 import type { L, LType, Transformer } from './geo_types';
 
 const spaceDelimitedToLatLng = (text: string): L.LatLngTuple[] => {

@@ -20,8 +20,8 @@ import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
 import { useHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
+import { joinAll } from '@/lib/tools';
 import type { ApiService, EntityType, RoCrate } from '@/services/api';
-import { joinAll } from '@/tools';
 
 const { t } = useI18n();
 const route = useRoute();

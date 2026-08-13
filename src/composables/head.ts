@@ -1,7 +1,7 @@
 import { useHead as useUnhead, type VueHeadClient } from '@unhead/vue';
 import { ui } from '@/configuration';
+import { first } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
-import { first } from '@/tools';
 
 export const useHead = (head: VueHeadClient, md: RoCrate) => {
   const {

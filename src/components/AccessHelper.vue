@@ -2,8 +2,8 @@
 import { inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { joinAll } from '@/lib/tools';
 import type { ApiService, EntityType, RoCrate } from '@/services/api';
-import { joinAll } from '@/tools';
 
 const { t } = useI18n();
 

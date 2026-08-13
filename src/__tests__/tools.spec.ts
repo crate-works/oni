@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseContentSize } from '@/tools';
+import { parseContentSize } from '@/lib/tools';
 
 describe('parseContentSize', () => {
   it('should return the number itself if it is a valid number and in bytes', () => {

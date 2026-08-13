@@ -1,6 +1,6 @@
 import { wktToGeoJSON } from '@terraformer/wkt';
 import type { Position } from 'geojson';
-import { first } from '@/tools';
+import { first } from '@/lib/tools';
 import { type GeoEntity, LocationDivIcon, type LType, type Transformer } from './geo_types';
 
 // biome-ignore lint/style/noNonNullAssertion: we don't care if they are defined here we just need to swap them

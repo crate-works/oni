@@ -1,9 +1,9 @@
 import { ROCrate } from 'ro-crate';
 
 import { api } from '@/configuration';
+import { parseContentSize } from '@/lib/tools';
 import { forceRenewToken, getValidAccessToken } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
-import { parseContentSize } from '@/tools';
 
 // TODO: use zod to validate the response we get back
 

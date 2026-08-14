@@ -198,6 +198,21 @@
     },
     "file": {
       "meta": {
+        "mode": "filter",
+        "top": [
+          {
+            "display": "Name",
+            "name": "name"
+          },
+          {
+            "display": "Description",
+            "name": "description"
+          },
+          {
+            "display": "Date Published",
+            "name": "datePublished"
+          }
+        ],
         "hide": [
           "name",
           "@type",

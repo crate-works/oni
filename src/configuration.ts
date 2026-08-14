@@ -60,17 +60,18 @@ const fieldDisplaySchema = z.strictObject({
   name: z.string(),
 });
 
-const metaSchema = z.discriminatedUnion('mode', [
-  z.strictObject({
-    mode: z.literal('filter'),
-    top: z.array(fieldDisplaySchema),
-    hide: z.array(z.string()),
-  }),
-  z.strictObject({
-    mode: z.literal('explicit'),
-    show: z.array(z.string()),
-  }),
-]);
+const filterMetaSchema = z.strictObject({
+  mode: z.literal('filter').optional().default('filter'),
+  top: z.array(fieldDisplaySchema).optional().default([]),
+  hide: z.array(z.string()),
+});
+
+const explicitMetaSchema = z.strictObject({
+  mode: z.literal('explicit'),
+  show: z.array(z.string()),
+});
+
+const metaSchema = z.union([filterMetaSchema, explicitMetaSchema]);
 
 const collectionSchema = z.strictObject({
   meta: metaSchema,

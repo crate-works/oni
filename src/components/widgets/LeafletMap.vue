@@ -5,15 +5,15 @@ import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css';
 import 'leaflet.path.drag';
 import 'leaflet/dist/leaflet.css';
 
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
+// Leaflet's default _getIconUrl prepends imagePath, which breaks Vite-resolved URLs.
+// Remove it so the imported URLs below are used as-is.
+delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import transformer from '@/components/widgets/geo';
 import type { GeoEntity } from './geo_types';
-
-// @ts-expect-error Upstream issue
-L.Icon.Default.prototype._getIconUrl = undefined;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl,

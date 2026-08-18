@@ -338,27 +338,36 @@ The following routes are available for use in navigation items:
 }
 ```
 
-### Text Replacements
+### Metadata Mapping
 
-Text replacements allow you to customise how field names are displayed throughout the interface using regular expressions.
+If `ui.metadataMapping.mappingFile` is provided, the portal will fetch the mapping file as an RO-Crate document to map metadata field names to display labels. The file must be either:
+
+- an absolute URL, or
+- a path relative to the app's public directory, such as `/mapping.json`
+
+The mapping file should be a valid RO-Crate (containing an `@graph` array), and each mapping entity in that graph should provide an `@id` (or `rdfs:label`) plus a `name` field. If not used, the portal will fall back to using `ui.metadataMapping.textReplacements` for display name mapping. See [ro-crate-masp](https://github.com/Language-Research-Technology/ro-crate-masp) for more information about the RO-Crate mapping format. Text replacements allow you to customise how field names are displayed throughout the interface using regular expressions.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `ui.textReplacements` | object | No | Regular expression patterns mapped to replacement strings (default: {}) |
+| `ui.metadataMapping.mappingFile` | string | No | Absolute URL or public path to the RO-Crate mapping file (default: undefined) |
+| `ui.metadataMapping.textReplacements` | object | No | Regular expression patterns mapped to replacement strings (default: {}) |
 
 **Example:**
 
 ```json
 {
   "ui": {
-    "textReplacements": {
-      "^_": "",
-      "^ldac:doi$": "DOI",
-      "^ldac:isDeIdentified$": "Is De-Identified",
-      "^citation$": "Related Works",
-      "^ldac:": "",
-      "^url$": "URL",
-      "^@type$": "Type"
+    "metadataMapping": {
+      "mappingFile": "ro-crate-metadata.json",
+      "textReplacements": {
+        "^_": "",
+        "^ldac:doi$": "DOI",
+        "^ldac:isDeIdentified$": "Is De-Identified",
+        "^citation$": "Related Works",
+        "^ldac:": "",
+        "^url$": "URL",
+        "^@type$": "Type"
+      }
     }
   }
 }

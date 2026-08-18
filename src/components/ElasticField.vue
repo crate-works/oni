@@ -6,7 +6,7 @@ import MetaField from '@/components/MetaField.vue';
 import LeafletMap from '@/components/widgets/LeafletMap.vue';
 
 import { ui } from '@/configuration';
-import { first, formatDuration, formatFileSize, joinAll, shortenText } from '@/tools';
+import { first, formatDuration, formatFileSize, joinAll, shortenText } from '@/lib/tools';
 
 const { t } = useI18n();
 

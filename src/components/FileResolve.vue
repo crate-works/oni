@@ -7,8 +7,8 @@ import PDFWidget from '@/components/widgets/PDFWidget.vue';
 import PlainTextWidget from '@/components/widgets/PlainTextWidget.vue';
 import { isFileVisibleByMetadata, resolveFileVisibilityConfig } from '@/composables/fileVisibility';
 import { ui } from '@/configuration';
+import { first } from '@/lib/tools';
 import type { AnnotationRef, ApiService, EntityType, RoCrate } from '@/services/api';
-import { first } from '@/tools';
 
 const api = inject<ApiService>('api');
 if (!api) {

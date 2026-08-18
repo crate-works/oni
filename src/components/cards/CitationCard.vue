@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { first } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
-import { first } from '@/tools';
 
 const { t } = useI18n();
 

@@ -1,8 +1,8 @@
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { CollectionConfig, FileConfig, ObjectConfig } from '@/configuration';
+import { first } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
-import { first } from '@/tools';
 
 export function useEntityView(config: CollectionConfig | ObjectConfig | FileConfig) {
   const router = useRouter();

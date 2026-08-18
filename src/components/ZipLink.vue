@@ -4,9 +4,9 @@ import { storeToRefs } from 'pinia';
 import { inject, onUpdated, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ui } from '@/configuration';
+import { formatFileSize } from '@/lib/tools';
 import { type ApiService, type EntityType, type GetZipMetaResponse } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
-import { formatFileSize } from '@/tools';
 
 const { t } = useI18n();
 

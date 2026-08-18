@@ -18,8 +18,8 @@ import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
 import { useHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { defaultPageSize, ui } from '@/configuration';
+import { formatFileSize, joinAll } from '@/lib/tools';
 import type { ApiService, EntityType, FileType, GetEntitiesParams, GetFilesParams, RoCrate } from '@/services/api';
-import { formatFileSize, joinAll } from '@/tools';
 
 const FETCH_LIMIT = 1000;
 

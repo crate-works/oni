@@ -1,4 +1,3 @@
-import { ui } from '@/configuration';
 import type { EntityType } from '@/services/api';
 
 const unitMultipliers = {
@@ -104,37 +103,6 @@ export const first = <T>(arr: T | T[]) => {
   }
 
   return arr[0] as T;
-};
-
-const textReplacements = ui.textReplacements;
-
-export const startCase = (str: string) => {
-  if (typeof str !== 'string' || !str) {
-    return '';
-  }
-
-  let words = str;
-
-  for (const [pattern, replacement] of Object.entries(textReplacements)) {
-    const regex = new RegExp(pattern, 'g');
-    words = words.replace(regex, replacement);
-  }
-
-  words = words
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .split(/[^a-zA-Z0-9]+/)
-    .filter((word) => word.length > 0)
-    .map((word) => {
-      // NOTE: Don't change the case of words that are in the replacements list
-      if (Object.values(textReplacements).includes(word)) {
-        return word;
-      }
-
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    })
-    .join(' ');
-
-  return words;
 };
 
 export const formatDuration = (seconds: number) => {

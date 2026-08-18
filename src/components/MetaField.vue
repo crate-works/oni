@@ -3,8 +3,9 @@ import { computed, ref } from 'vue';
 import FieldHelperCard from '@/components/cards/FieldHelperCard.vue';
 import ElasticField from '@/components/ElasticField.vue';
 import { defaultPageSize, ui } from '@/configuration';
+import { startCase } from '@/lib/metadata';
+import { first } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
-import { first, startCase } from '@/tools';
 
 const { paginatedMeta } = ui.main;
 

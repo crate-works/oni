@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Truncate from '@/components/Truncate.vue';
+import { joinAll } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
-import { joinAll } from '@/tools';
 
 const { license } = defineProps<{
   license: NonNullable<RoCrate['license']>;

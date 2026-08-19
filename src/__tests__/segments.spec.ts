@@ -17,7 +17,7 @@ import {
 
 const pageSegment: SearchSegment = { type: 'page', page: 4, highlight: ['...<mark>kurrama</mark>...'] };
 const annotationSegment: SearchSegment = {
-  type: 'annotation',
+  type: 'time-aligned-annotation',
   tier: 'tx@EDD',
   startMs: 192000,
   endMs: 195400,
@@ -49,7 +49,9 @@ describe('segmentLabel', () => {
   });
 
   it('labels hour-long annotations', () => {
-    expect(segmentLabel({ type: 'annotation', tier: 't', startMs: 3600000, endMs: 3661000 })).toBe('1:00:00–1:01:01');
+    expect(segmentLabel({ type: 'time-aligned-annotation', tier: 't', startMs: 3600000, endMs: 3661000 })).toBe(
+      '1:00:00–1:01:01',
+    );
   });
 
   it('returns null for unknown segment types', () => {
@@ -58,7 +60,7 @@ describe('segmentLabel', () => {
 
   it('returns null for known types missing their location fields', () => {
     expect(segmentLabel({ type: 'page' })).toBe(null);
-    expect(segmentLabel({ type: 'annotation', tier: 't' })).toBe(null);
+    expect(segmentLabel({ type: 'time-aligned-annotation', tier: 't' })).toBe(null);
   });
 });
 
@@ -76,12 +78,14 @@ describe('segmentUrl', () => {
   });
 
   it('omits the tier parameter when the segment has no tier', () => {
-    expect(segmentUrl('abc', { type: 'annotation', startMs: 1000, endMs: 2000 })).toBe('/file?id=abc&start=1');
+    expect(segmentUrl('abc', { type: 'time-aligned-annotation', startMs: 1000, endMs: 2000 })).toBe(
+      '/file?id=abc&start=1',
+    );
   });
 
   it('URL-encodes arbitrary depositor tier names', () => {
     const tier = 'phonetic (ˈkʊrama) & more';
-    const url = segmentUrl('abc', { type: 'annotation', tier, startMs: 0, endMs: 1 });
+    const url = segmentUrl('abc', { type: 'time-aligned-annotation', tier, startMs: 0, endMs: 1 });
     expect(url).not.toBe(null);
     const query = new URLSearchParams((url as string).split('?')[1]);
     expect(query.get('tier')).toBe(tier);
@@ -94,8 +98,8 @@ describe('segmentUrl', () => {
   it('returns null for malformed known segments', () => {
     expect(segmentUrl('abc', { type: 'page' })).toBe(null);
     expect(segmentUrl('abc', { type: 'page', page: 0 })).toBe(null);
-    expect(segmentUrl('abc', { type: 'annotation', tier: 't' })).toBe(null);
-    expect(segmentUrl('abc', { type: 'annotation', tier: 't', startMs: -5, endMs: 0 })).toBe(null);
+    expect(segmentUrl('abc', { type: 'time-aligned-annotation', tier: 't' })).toBe(null);
+    expect(segmentUrl('abc', { type: 'time-aligned-annotation', tier: 't', startMs: -5, endMs: 0 })).toBe(null);
   });
 });
 
@@ -127,6 +131,15 @@ describe('segmentRows', () => {
 
   it('drops segments with neither a label nor a highlight', () => {
     expect(segmentRows('abc', [{ type: 'mystery' }])).toEqual([]);
+  });
+
+  // The spec renamed this type to 'time-aligned-annotation' before 0.1.0 shipped
+  // and nabu rewrote its stored segments to match, so the old value is a foreign
+  // type like any other — no timecode label, no deep link.
+  it('does not deep-link the pre-rename annotation type', () => {
+    const rows = segmentRows('abc', [{ ...annotationSegment, type: 'annotation' }]);
+
+    expect(rows).toEqual([{ label: null, tier: null, url: null, highlight: '...spoken...' }]);
   });
 });
 
@@ -223,7 +236,12 @@ describe('matchAnnotation', () => {
 describe('startParamToMs', () => {
   it('round-trips segment start times through the URL without float drift', () => {
     for (const startMs of [0, 192000, 192500, 195400, 3599999]) {
-      const url = segmentUrl('abc', { type: 'annotation', tier: 't', startMs, endMs: startMs + 1000 }) as string;
+      const url = segmentUrl('abc', {
+        type: 'time-aligned-annotation',
+        tier: 't',
+        startMs,
+        endMs: startMs + 1000,
+      }) as string;
       const start = new URLSearchParams(url.split('?')[1]).get('start') as string;
       expect(startParamToMs(Number(start))).toBe(startMs);
     }

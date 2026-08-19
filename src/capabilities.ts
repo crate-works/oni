@@ -42,6 +42,15 @@ export const parseCapabilities = (data: unknown): Capabilities | null => {
   return result.success ? result.data : null;
 };
 
+// Values are normalised on the way in rather than assumed to be bare years:
+// the set of date fields is resolved from capabilities, so a legacy bookmark
+// value can reach here before syncStateFromUrl had the set to normalise it.
+const toYearRange = (value: string) => {
+  const year = yearFromFilterValue(value);
+
+  return year ? [{ gte: `${year}-01-01`, lte: `${year}-12-31` }] : [];
+};
+
 // The date facet selects whole years, held in UI state and URLs as plain year
 // strings; the wire format for a date filter is an array of inclusive ranges
 // OR-ed together. Returns the input object itself when no date field is
@@ -54,7 +63,7 @@ export const toRequestFilters = (filters: Record<string, string[]>, dateFields: 
   return Object.fromEntries(
     Object.entries(filters).map(([name, values]) => [
       name,
-      dateFields.has(name) ? values.map((year) => ({ gte: `${year}-01-01`, lte: `${year}-12-31` })) : values,
+      dateFields.has(name) ? values.flatMap(toYearRange) : values,
     ]),
   );
 };
@@ -63,6 +72,28 @@ export const toRequestFilters = (filters: Record<string, string[]>, dateFields: 
 // carried "YYYY-01-01T00:00:00.000Z TO YYYY-12-31T23:59:59.999Z" strings. Both
 // lead with the year, which is all the facet keeps.
 export const yearFromFilterValue = (value: string): string | undefined => value.match(/^(\d{4})(?:-|$)/)?.[1];
+
+// The spec's filter types mapped onto the facet UI this portal can render:
+// dates get the year-range facet, the other known types are term facets.
+const facetTypeByFilterType: Record<string, 'standard' | 'date_histogram'> = {
+  string: 'standard',
+  number: 'standard',
+  boolean: 'standard',
+  date: 'date_histogram',
+};
+
+// How a declared facet should be rendered, or null for one to hide. Both cases
+// the spec calls out land here: a filter typed with something added by a later
+// revision, which clients must hide rather than guess at, and a facet the
+// archive never declared as a filter — unusable, since clicking it would send
+// a key the API rejects with a 400.
+export const facetTypeFor = (name: string, search: Capabilities['search']): 'standard' | 'date_histogram' | null =>
+  facetTypeByFilterType[search.filters[name]?.type ?? ''] ?? null;
+
+// The fields the archive declares as dates, whose values go out as ranges
+// rather than exact terms.
+export const dateFilterNames = (search: Capabilities['search']): string[] =>
+  Object.entries(search.filters).flatMap(([name, { type }]) => (type === 'date' ? [name] : []));
 
 // Configured aggregations the API doesn't declare can break search with 500s,
 // so they're a deployment error. Comparison is by facet name only: capability

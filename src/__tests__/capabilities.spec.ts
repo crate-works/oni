@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  dateFilterNames,
+  facetTypeFor,
   findUnsupportedFacets,
   parseCapabilities,
   stripUnsupportedFilters,
@@ -179,6 +181,59 @@ describe('toRequestFilters', () => {
     const filters = { inLanguage: ['English', 'Tok Pisin'] };
 
     expect(toRequestFilters(filters, new Set(['createdAt']))).toBe(filters);
+  });
+
+  it('normalises a legacy timestamp-range value that reached it unconverted', () => {
+    const filters = { createdAt: ['1965-01-01T00:00:00.000Z TO 1965-12-31T23:59:59.999Z'] };
+
+    expect(toRequestFilters(filters, new Set(['createdAt']))).toEqual({
+      createdAt: [{ gte: '1965-01-01', lte: '1965-12-31' }],
+    });
+  });
+
+  it('drops a date value it cannot read a year from rather than sending a malformed range', () => {
+    expect(toRequestFilters({ createdAt: ['whenever'] }, new Set(['createdAt']))).toEqual({ createdAt: [] });
+  });
+});
+
+describe('facetTypeFor', () => {
+  const search = {
+    filters: {
+      inLanguage: { type: 'string' },
+      createdAt: { type: 'date' },
+      duration: { type: 'number' },
+      openAccess: { type: 'boolean' },
+      shape: { type: 'geo' },
+    },
+    facets: {},
+  };
+
+  it('renders a date filter as a year-range facet', () => {
+    expect(facetTypeFor('createdAt', search)).toBe('date_histogram');
+  });
+
+  it('renders the other known filter types as term facets', () => {
+    expect(facetTypeFor('inLanguage', search)).toBe('standard');
+    expect(facetTypeFor('duration', search)).toBe('standard');
+    expect(facetTypeFor('openAccess', search)).toBe('standard');
+  });
+
+  it('hides a filter typed with something added by a later spec revision', () => {
+    expect(facetTypeFor('shape', search)).toBe(null);
+  });
+
+  it('hides a facet the archive never declared as a filter', () => {
+    expect(facetTypeFor('undeclared', search)).toBe(null);
+  });
+});
+
+describe('dateFilterNames', () => {
+  it('returns only the fields declared with a date type', () => {
+    expect(dateFilterNames(validPayload.search)).toEqual(['createdAt']);
+  });
+
+  it('returns nothing when the archive declares no date filters', () => {
+    expect(dateFilterNames({ filters: { inLanguage: { type: 'string' } }, facets: {} })).toEqual([]);
   });
 });
 

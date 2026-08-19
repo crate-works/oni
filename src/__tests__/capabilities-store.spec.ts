@@ -274,9 +274,51 @@ describe('capabilities store facetConfig', () => {
     await load(store);
 
     expect(store.facetConfig).toEqual([
-      { name: 'inLanguage', display: 'Language' },
-      { name: 'mediaType', display: 'Media Type' },
+      { name: 'inLanguage', display: 'Language', type: 'standard' },
+      { name: 'mediaType', display: 'Media Type', type: 'standard' },
     ]);
+  });
+
+  it('types a derived facet as a date histogram when its filter is a date', async () => {
+    const store = useCapabilitiesStore();
+
+    await store.init(
+      stubApi(async () => ({
+        ...validPayload,
+        search: { ...validPayload.search, facets: { createdAt: { label: 'Date created' } } },
+      })),
+    );
+
+    expect(store.facetConfig).toEqual([{ name: 'createdAt', display: 'Date created', type: 'date_histogram' }]);
+  });
+
+  it('hides a derived facet whose filter type it does not recognise', async () => {
+    const store = useCapabilitiesStore();
+
+    await store.init(
+      stubApi(async () => ({
+        ...validPayload,
+        search: {
+          filters: { ...validPayload.search.filters, shape: { type: 'geo' } },
+          facets: { inLanguage: { label: 'Language' }, shape: { label: 'Shape' } },
+        },
+      })),
+    );
+
+    expect(store.facetConfig).toEqual([{ name: 'inLanguage', display: 'Language', type: 'standard' }]);
+  });
+
+  it('hides a derived facet the archive never declared as a filter', async () => {
+    const store = useCapabilitiesStore();
+
+    await store.init(
+      stubApi(async () => ({
+        ...validPayload,
+        search: { ...validPayload.search, facets: { inLanguage: {}, orphan: {} } },
+      })),
+    );
+
+    expect(store.facetConfig.map((f) => f.name)).toEqual(['inLanguage']);
   });
 
   it('is empty while pending when aggregations are not configured', () => {
@@ -289,5 +331,28 @@ describe('capabilities store facetConfig', () => {
     await fail(store);
 
     expect(store.facetConfig).toEqual([]);
+  });
+});
+
+describe('capabilities store dateFilters', () => {
+  it("takes the archive's date filter declarations", async () => {
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect([...store.dateFilters]).toEqual(['createdAt']);
+  });
+
+  it('unions in configured date_histogram facets so encoding survives a failure', async () => {
+    ui.aggregations = [{ display: 'Year', name: 'dateCreated', type: 'date_histogram', active: false }];
+    const store = useCapabilitiesStore();
+
+    await fail(store);
+
+    expect([...store.dateFilters]).toEqual(['dateCreated']);
+  });
+
+  it('is empty while pending with nothing configured', () => {
+    expect([...useCapabilitiesStore().dateFilters]).toEqual([]);
   });
 });

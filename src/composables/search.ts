@@ -8,10 +8,6 @@ import { useCapabilitiesStore } from '@/stores/capabilities';
 
 const { mapConfig, searchFields } = ui;
 
-// Date facets hold plain year strings in UI state; toRequestFilters converts
-// them to the API's range syntax per search request.
-const dateFacets = new Set((ui.aggregations ?? []).filter((a) => a.type === 'date_histogram').map((a) => a.name));
-
 export type Bucket = {
   name: string;
   count: number;
@@ -161,7 +157,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
     if (route.query.f) {
       const filterQuery = JSON.parse(decodeURIComponent(route.query.f.toString())) as Record<string, string[]>;
       for (const [key, val] of Object.entries(filterQuery)) {
-        const values = dateFacets.has(key) ? val.flatMap((v) => yearFromFilterValue(v) ?? []) : val;
+        const values = capabilitiesStore.dateFilters.has(key) ? val.flatMap((v) => yearFromFilterValue(v) ?? []) : val;
         filters.value[key] = values;
         if (filters.value[key].length === 0) {
           delete filters.value[key];
@@ -261,7 +257,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
       const params: SearchParams = {
         query,
         searchType: advancedSearchEnabled.value ? 'advanced' : 'basic',
-        filters: toRequestFilters(filters.value, dateFacets),
+        filters: toRequestFilters(filters.value, capabilitiesStore.dateFilters),
         limit: pageSize.value,
         offset: (currentPage.value - 1) * pageSize.value,
         sort: selectedSorting.value?.value,

@@ -38,7 +38,7 @@ export const segmentLabel = (segment: SearchSegment): string | null => {
     return `p. ${segment.page}`;
   }
 
-  if (segment.type === 'annotation' && isValidMs(segment.startMs) && isValidMs(segment.endMs)) {
+  if (segment.type === 'time-aligned-annotation' && isValidMs(segment.startMs) && isValidMs(segment.endMs)) {
     return `${formatTimecode(segment.startMs)}–${formatTimecode(segment.endMs)}`;
   }
 
@@ -62,7 +62,7 @@ export const segmentUrl = (fileId: string, segment: SearchSegment): string | nul
     return `${fileDeepLink(fileId)}&page=${segment.page}`;
   }
 
-  if (segment.type === 'annotation' && isValidMs(segment.startMs)) {
+  if (segment.type === 'time-aligned-annotation' && isValidMs(segment.startMs)) {
     return fileDeepLink(fileId, segment.startMs / 1000, segment.tier ?? null);
   }
 
@@ -73,7 +73,7 @@ export const segmentRows = (fileId: string, segments: SearchSegment[]): SegmentR
   segments
     .map((segment) => ({
       label: segmentLabel(segment),
-      tier: (segment.type === 'annotation' && segment.tier) || null,
+      tier: (segment.type === 'time-aligned-annotation' && segment.tier) || null,
       url: segmentUrl(fileId, segment),
       highlight: segment.highlight?.[0] ?? null,
     }))

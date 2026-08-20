@@ -60,13 +60,14 @@ describe('capabilities store', () => {
     expect(store.capabilities).toEqual(validPayload);
   });
 
-  it('transitions to failed with a console warning when the fetch throws', async () => {
+  it('transitions to failed, warning and reporting to Sentry, when the fetch throws', async () => {
     const store = useCapabilitiesStore();
 
     await fail(store);
 
     expect(store.status).toBe('failed');
-    expect(console.warn).toHaveBeenCalledOnce();
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('GET /capabilities'));
+    expect(captureMessage).toHaveBeenCalledWith(expect.stringContaining('GET /capabilities'), 'error');
   });
 
   it('transitions to failed on a 404 error response', async () => {
@@ -76,6 +77,7 @@ describe('capabilities store', () => {
 
     expect(store.status).toBe('failed');
     expect(console.warn).toHaveBeenCalledOnce();
+    expect(captureMessage).toHaveBeenCalledOnce();
   });
 
   it('transitions to failed on a malformed payload', async () => {
@@ -85,6 +87,7 @@ describe('capabilities store', () => {
 
     expect(store.status).toBe('failed');
     expect(console.warn).toHaveBeenCalledOnce();
+    expect(captureMessage).toHaveBeenCalledOnce();
   });
 });
 
@@ -168,37 +171,16 @@ describe('capabilities store getters', () => {
       expect(vi.mocked(console.warn).mock.calls[1]?.[0]).toContain('anotherBogus');
     });
   });
-
-  describe('showBanner', () => {
-    it('is false while pending', () => {
-      expect(useCapabilitiesStore().showBanner).toBe(false);
-    });
-
-    it('is true when failed', async () => {
-      const store = useCapabilitiesStore();
-      await fail(store);
-
-      expect(store.showBanner).toBe(true);
-    });
-
-    it('is false when loaded', async () => {
-      const store = useCapabilitiesStore();
-      await load(store);
-
-      expect(store.showBanner).toBe(false);
-    });
-  });
 });
 
 describe('capabilities store facet mismatch check', () => {
-  it('records configured facets the API does not declare and shows the banner', async () => {
+  it('records configured facets the API does not declare', async () => {
     ui.aggregations = [aggregation('inLanguage'), aggregation('bogusFacet')];
     const store = useCapabilitiesStore();
 
     await load(store);
 
     expect(store.unsupportedFacets).toEqual(['bogusFacet']);
-    expect(store.showBanner).toBe(true);
   });
 
   it('warns once on the console naming all offending facets', async () => {
@@ -229,7 +211,6 @@ describe('capabilities store facet mismatch check', () => {
     await load(store);
 
     expect(store.unsupportedFacets).toEqual([]);
-    expect(store.showBanner).toBe(false);
     expect(console.warn).not.toHaveBeenCalled();
     expect(captureMessage).not.toHaveBeenCalled();
   });
@@ -241,7 +222,7 @@ describe('capabilities store facet mismatch check', () => {
     await fail(store);
 
     expect(store.unsupportedFacets).toEqual([]);
-    expect(captureMessage).not.toHaveBeenCalled();
+    expect(captureMessage).not.toHaveBeenCalledWith(expect.stringContaining('bogusFacet'), 'error');
   });
 
   it('skips the check when aggregations are not configured', async () => {
@@ -251,7 +232,6 @@ describe('capabilities store facet mismatch check', () => {
     await load(store);
 
     expect(store.unsupportedFacets).toEqual([]);
-    expect(store.showBanner).toBe(false);
   });
 });
 
@@ -411,14 +391,13 @@ describe('capabilities store dateFilters', () => {
 });
 
 describe('capabilities store hiddenFacets', () => {
-  it('records configured facets it cannot render and shows the banner', async () => {
+  it('records configured facets it cannot render', async () => {
     ui.aggregations = [aggregation('inLanguage'), aggregation('shape'), aggregation('orphan')];
     const store = useCapabilitiesStore();
 
     await store.init(stubApi(async () => unrenderablePayload));
 
     expect(store.hiddenFacets).toEqual(['shape', 'orphan']);
-    expect(store.showBanner).toBe(true);
   });
 
   it('warns on the console and reports to Sentry naming the offenders', async () => {
@@ -448,7 +427,6 @@ describe('capabilities store hiddenFacets', () => {
     await load(store);
 
     expect(store.hiddenFacets).toEqual([]);
-    expect(store.showBanner).toBe(false);
   });
 
   it('is empty while capabilities is pending', () => {

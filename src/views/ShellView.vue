@@ -9,10 +9,8 @@ import { ui } from '@/configuration';
 
 import type { Announcement, ApiService, GetTermsResponse } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
-import { useCapabilitiesStore } from '@/stores/capabilities';
 
 const authStore = useAuthStore();
-const capabilitiesStore = useCapabilitiesStore();
 
 const api = inject<ApiService>('api');
 if (!api) {
@@ -118,17 +116,6 @@ if (manageTermsAndConditions) {
     <footer>
       <FooterView />
     </footer>
-
-    <!-- el-alert handles its own dismissal; it lasts for the page load only,
-         so the banner returns on reload while the archive is non-conformant. -->
-    <div v-if="capabilitiesStore.showBanner" class="fixed bottom-0 inset-x-0 z-50">
-      <el-alert
-        title="This archive's API does not support all features of this site. Some functionality may be unavailable."
-        type="warning"
-        show-icon
-        center
-      />
-    </div>
   </template>
 
   <template v-else>

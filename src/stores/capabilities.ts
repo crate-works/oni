@@ -18,14 +18,16 @@ import type { ApiService } from '@/services/api';
 // Session-scoped feature detection against the archive's GET /capabilities
 // endpoint. Fetched once at startup, never persisted — stale capabilities must
 // not survive an API redeploy. A missing, unreachable, or malformed endpoint
-// is non-conformance: status becomes 'failed' and features degrade gracefully.
+// is non-conformance: status becomes 'failed', features degrade gracefully and
+// the operator is told via the console and Sentry. Nothing is surfaced to end
+// users — degradation is silent by design and there is nothing they can act on.
 export const useCapabilitiesStore = defineStore('capabilities', () => {
   const failed = ref(false);
   const capabilities = ref<Capabilities>();
   const status = computed(() => (failed.value ? 'failed' : capabilities.value ? 'loaded' : 'pending'));
 
   // Empty while pending or failed — the mismatch check only judges a loaded
-  // response; in the failed state the banner already covers non-conformance.
+  // response; the failed state is reported on its own.
   const unsupportedFacets = computed(() =>
     capabilities.value ? findUnsupportedFacets(ui.aggregations ?? [], capabilities.value.search.facets) : [],
   );
@@ -33,9 +35,10 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
   // Configured facets this portal can't render: the archive types the filter
   // with something a later spec revision added, or declares the facet without
   // the matching filter. The spec's rule is to hide them, so they're reported
-  // rather than left to vanish from a curated panel with no explanation. Names
-  // unsupportedFacets already covers are left to it — same offender, more
-  // specific cause. Empty while pending or failed: nothing to judge against.
+  // to the operator rather than left to vanish from a curated panel with no
+  // explanation. Names unsupportedFacets already covers are left to it — same
+  // offender, more specific cause. Empty while pending or failed: nothing to
+  // judge against.
   const hiddenFacets = computed(() => {
     const search = capabilities.value?.search;
     if (!search || !ui.aggregations) {
@@ -100,9 +103,10 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
     const parsed = parseCapabilities(response);
     if (!parsed) {
       failed.value = true;
-      console.warn(
-        "This archive's API does not conform to the RO-Crate API spec: GET /capabilities is missing or invalid",
-      );
+      const message =
+        "This archive's API does not conform to the RO-Crate API spec: GET /capabilities is missing or invalid";
+      console.warn(message);
+      captureMessage(message, 'error');
 
       return;
     }
@@ -154,10 +158,6 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
     return sanitised;
   };
 
-  const showBanner = computed(
-    () => failed.value || unsupportedFacets.value.length > 0 || hiddenFacets.value.length > 0,
-  );
-
   return {
     status,
     capabilities,
@@ -169,6 +169,5 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
     hasExtension,
     supportedFilters,
     sanitiseFilters,
-    showBanner,
   };
 });

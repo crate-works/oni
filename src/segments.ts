@@ -23,12 +23,16 @@ const isValidPage = (page: unknown): page is number => Number.isInteger(page) &&
 
 const isValidMs = (ms: unknown): ms is number => typeof ms === 'number' && Number.isFinite(ms) && ms >= 0;
 
-export const formatTimecode = (ms: number): string => {
+// A position within a recording: MM:SS, gaining an hours part past the hour.
+// fraction adds centiseconds, for callers reading annotation boundaries that
+// can sit less than a second apart.
+export const formatTimecode = (ms: number, { fraction = false } = {}): string => {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  const mmss = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const centis = fraction ? `.${String(Math.floor((ms % 1000) / 10)).padStart(2, '0')}` : '';
+  const mmss = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}${centis}`;
 
   return hours > 0 ? `${hours}:${mmss}` : mmss;
 };

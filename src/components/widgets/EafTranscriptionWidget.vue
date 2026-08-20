@@ -3,7 +3,7 @@ import type { TableInstance } from 'element-plus';
 import { computed, nextTick, ref, watch } from 'vue';
 import EafTimelineView from '@/components/widgets/EafTimelineView.vue';
 import { type EafDocument, parseEaf } from '@/composables/useEafParser';
-import { matchAnnotation } from '@/segments';
+import { formatTimecode, matchAnnotation } from '@/segments';
 
 const props = defineProps<{
   src: string;
@@ -90,14 +90,6 @@ watch(
 );
 
 const currentTimeMs = computed(() => (props.currentTime ?? -1) * 1000);
-
-const formatTime = (ms: number): string => {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const millis = Math.floor((ms % 1000) / 10);
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(2, '0')}`;
-};
 
 const isActive = (startMs: number, endMs: number): boolean => {
   if (props.currentTime === undefined) {
@@ -248,10 +240,10 @@ const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) =
       <el-table ref="tableRef" :data="mergedRows" :row-class-name="tableRowClassName" @row-click="handleRowClick"
         class="cursor-pointer" height="100%">
         <el-table-column label="Start" width="120">
-          <template #default="{ row }">{{ formatTime(row.startMs) }}</template>
+          <template #default="{ row }">{{ formatTimecode(row.startMs, { fraction: true }) }}</template>
         </el-table-column>
         <el-table-column label="End" width="120">
-          <template #default="{ row }">{{ formatTime(row.endMs) }}</template>
+          <template #default="{ row }">{{ formatTimecode(row.endMs, { fraction: true }) }}</template>
         </el-table-column>
         <el-table-column label="Text">
           <template #default="{ row }">

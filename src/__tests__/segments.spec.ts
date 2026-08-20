@@ -37,6 +37,14 @@ describe('formatTimecode', () => {
     expect(formatTimecode(3723000)).toBe('1:02:03');
     expect(formatTimecode(36000000)).toBe('10:00:00');
   });
+
+  it('appends centiseconds when asked, truncating rather than rounding', () => {
+    expect(formatTimecode(0, { fraction: true })).toBe('00:00.00');
+    expect(formatTimecode(195400, { fraction: true })).toBe('03:15.40');
+    expect(formatTimecode(195409, { fraction: true })).toBe('03:15.40');
+    expect(formatTimecode(195450, { fraction: true })).toBe('03:15.45');
+    expect(formatTimecode(3723000, { fraction: true })).toBe('1:02:03.00');
+  });
 });
 
 describe('segmentLabel', () => {

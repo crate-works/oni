@@ -48,7 +48,8 @@ serves from `public/`. Override the fetch path with the `VITE_ONI_CONFIG_PATH`
 env var if you need to point at a different file.
 
 Edit the file as needed. The most important field is
-`api.rocrate.endpoint`, which must point at a running `arocapi`.
+`api.rocrate.endpoint`, which must point at a running `arocapi` serving
+RO-Crate API spec 0.4.0 or later.
 
 ### 3. Start an `arocapi` RO-Crate API
 

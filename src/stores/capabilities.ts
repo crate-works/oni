@@ -30,6 +30,23 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
     capabilities.value ? findUnsupportedFacets(ui.aggregations ?? [], capabilities.value.search.facets) : [],
   );
 
+  // Configured facets this portal can't render: the archive types the filter
+  // with something a later spec revision added, or declares the facet without
+  // the matching filter. The spec's rule is to hide them, so they're reported
+  // rather than left to vanish from a curated panel with no explanation. Names
+  // unsupportedFacets already covers are left to it — same offender, more
+  // specific cause. Empty while pending or failed: nothing to judge against.
+  const hiddenFacets = computed(() => {
+    const search = capabilities.value?.search;
+    if (!search || !ui.aggregations) {
+      return [];
+    }
+
+    return ui.aggregations
+      .map(({ name }) => name)
+      .filter((name) => !unsupportedFacets.value.includes(name) && facetTypeFor(name, search) === null);
+  });
+
   // The facet definitions driving the search UI. Configured aggregations win —
   // curation, renaming, reordering and date_histogram facets stay possible —
   // otherwise every facet the archive declares is shown under its capability
@@ -37,15 +54,17 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
   // typed from the filter declaration that backs it. Empty until capabilities
   // loads (and stays empty on failure) when nothing is configured.
   //
-  // Facets this portal can't render are dropped from the derived list only. A
-  // configured facet is an explicit deployment choice, so it stays as authored
-  // rather than silently vanishing from a curated panel.
+  // Either way, a facet this portal can't render is dropped. A configured one
+  // keeps the presentation it was authored with — the hide rule governs whether
+  // it appears, not how it looks — and is only judged once capabilities loads,
+  // so the panel doesn't flicker while the request is in flight.
   const facetConfig = computed<AggregationInput[]>(() => {
+    const search = capabilities.value?.search;
+
     if (ui.aggregations) {
-      return ui.aggregations;
+      return search ? ui.aggregations.filter(({ name }) => facetTypeFor(name, search) !== null) : ui.aggregations;
     }
 
-    const search = capabilities.value?.search;
     if (!search) {
       return [];
     }
@@ -97,6 +116,14 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
       );
       captureMessage(`Configured facets not supported by the archive's API: ${offenders}`, 'error');
     }
+
+    if (hiddenFacets.value.length > 0) {
+      const offenders = hiddenFacets.value.join(', ');
+      console.warn(
+        `This site's configuration declares search facets this portal cannot render, so they are hidden: ${offenders}`,
+      );
+      captureMessage(`Configured facets hidden as unrenderable: ${offenders}`, 'error');
+    }
   };
 
   const hasExtension = (name: string) => name in (capabilities.value?.extensions ?? {});
@@ -127,12 +154,15 @@ export const useCapabilitiesStore = defineStore('capabilities', () => {
     return sanitised;
   };
 
-  const showBanner = computed(() => failed.value || unsupportedFacets.value.length > 0);
+  const showBanner = computed(
+    () => failed.value || unsupportedFacets.value.length > 0 || hiddenFacets.value.length > 0,
+  );
 
   return {
     status,
     capabilities,
     unsupportedFacets,
+    hiddenFacets,
     facetConfig,
     dateFilters,
     init,

@@ -14,6 +14,16 @@ const stubApi = (getCapabilities: () => Promise<object>) => ({ getCapabilities }
 
 const aggregation = (name: string) => ({ display: name, name, type: 'standard' as const, active: false });
 
+// 'shape' is typed with something a later spec revision added; 'orphan' is
+// declared as a facet the archive never backed with a filter.
+const unrenderablePayload = {
+  ...validPayload,
+  search: {
+    filters: { ...validPayload.search.filters, shape: { type: 'geo' } },
+    facets: { ...validPayload.search.facets, shape: { label: 'Shape' }, orphan: { label: 'Orphan' } },
+  },
+};
+
 const load = async (store: ReturnType<typeof useCapabilitiesStore>) => {
   await store.init(stubApi(async () => validPayload));
 };
@@ -259,6 +269,49 @@ describe('capabilities store facetConfig', () => {
     expect(store.facetConfig).toEqual([aggregation('inLanguage')]);
   });
 
+  it('drops a configured facet whose filter type it does not recognise', async () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('shape')];
+    const store = useCapabilitiesStore();
+
+    await store.init(stubApi(async () => unrenderablePayload));
+
+    expect(store.facetConfig).toEqual([aggregation('inLanguage')]);
+  });
+
+  it('drops a configured facet the archive never declared as a filter', async () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('orphan')];
+    const store = useCapabilitiesStore();
+
+    await store.init(stubApi(async () => unrenderablePayload));
+
+    expect(store.facetConfig.map((f) => f.name)).toEqual(['inLanguage']);
+  });
+
+  it('keeps a renderable configured facet exactly as authored', async () => {
+    const authored = { display: 'Year', name: 'createdAt', type: 'date_histogram' as const, active: true };
+    ui.aggregations = [authored];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.facetConfig).toEqual([authored]);
+  });
+
+  it('shows the configured panel in full while capabilities is still pending', () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('shape')];
+
+    expect(useCapabilitiesStore().facetConfig).toEqual([aggregation('inLanguage'), aggregation('shape')]);
+  });
+
+  it('shows the configured panel in full when capabilities failed', async () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('shape')];
+    const store = useCapabilitiesStore();
+
+    await fail(store);
+
+    expect(store.facetConfig).toEqual([aggregation('inLanguage'), aggregation('shape')]);
+  });
+
   it('honours a deliberately empty configured list even once capabilities loads', async () => {
     ui.aggregations = [];
     const store = useCapabilitiesStore();
@@ -354,5 +407,53 @@ describe('capabilities store dateFilters', () => {
 
   it('is empty while pending with nothing configured', () => {
     expect([...useCapabilitiesStore().dateFilters]).toEqual([]);
+  });
+});
+
+describe('capabilities store hiddenFacets', () => {
+  it('records configured facets it cannot render and shows the banner', async () => {
+    ui.aggregations = [aggregation('inLanguage'), aggregation('shape'), aggregation('orphan')];
+    const store = useCapabilitiesStore();
+
+    await store.init(stubApi(async () => unrenderablePayload));
+
+    expect(store.hiddenFacets).toEqual(['shape', 'orphan']);
+    expect(store.showBanner).toBe(true);
+  });
+
+  it('warns on the console and reports to Sentry naming the offenders', async () => {
+    ui.aggregations = [aggregation('shape')];
+    const store = useCapabilitiesStore();
+
+    await store.init(stubApi(async () => unrenderablePayload));
+
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('shape'));
+    expect(captureMessage).toHaveBeenCalledWith(expect.stringContaining('shape'), 'error');
+  });
+
+  it('leaves a facet the archive does not declare at all to unsupportedFacets', async () => {
+    ui.aggregations = [aggregation('bogusFacet')];
+    const store = useCapabilitiesStore();
+
+    await store.init(stubApi(async () => unrenderablePayload));
+
+    expect(store.unsupportedFacets).toEqual(['bogusFacet']);
+    expect(store.hiddenFacets).toEqual([]);
+  });
+
+  it('is empty when every configured facet is renderable', async () => {
+    ui.aggregations = [aggregation('inLanguage')];
+    const store = useCapabilitiesStore();
+
+    await load(store);
+
+    expect(store.hiddenFacets).toEqual([]);
+    expect(store.showBanner).toBe(false);
+  });
+
+  it('is empty while capabilities is pending', () => {
+    ui.aggregations = [aggregation('shape')];
+
+    expect(useCapabilitiesStore().hiddenFacets).toEqual([]);
   });
 });

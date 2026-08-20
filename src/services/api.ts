@@ -1,9 +1,11 @@
 import { ROCrate } from 'ro-crate';
 
+import type { Filters } from '@/capabilities';
 import { api } from '@/configuration';
 import { parseContentSize } from '@/lib/tools';
 import { forceRenewToken, getValidAccessToken } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
+import { useCapabilitiesStore } from '@/stores/capabilities';
 
 // TODO: use zod to validate the response we get back
 
@@ -26,7 +28,7 @@ export type GetFilesParams = CommonParams & {
 export type SearchParams = CommonParams & {
   searchType?: 'basic' | 'advanced';
   query: string;
-  filters?: Record<string, string[]>;
+  filters?: Filters;
   boundingBox?: {
     topRight: { lat: number; lng: number };
     bottomLeft: { lat: number; lng: number };
@@ -199,12 +201,14 @@ export class ApiService {
   #clientId: string | undefined;
   #usesRedirects: boolean | undefined;
   #store: ReturnType<typeof useAuthStore>;
+  #capabilities: ReturnType<typeof useCapabilitiesStore>;
 
   constructor() {
     const { endpoint, usesRedirects } = api.rocrate;
     this.#apiUri = `${endpoint}`;
     this.#clientId = api.oidc?.clientId;
     this.#store = useAuthStore();
+    this.#capabilities = useCapabilitiesStore();
     this.#usesRedirects = usesRedirects;
   }
 
@@ -220,7 +224,14 @@ export class ApiService {
     return files;
   }
 
+  // Filters are sanitised at the API seam so no caller can send keys the API
+  // rejects with a 400; the store passes them through untouched until
+  // capabilities has loaded.
   async search(params: SearchParams) {
+    if (params.filters) {
+      params = { ...params, filters: this.#capabilities.sanitiseFilters(params.filters) };
+    }
+
     const response = await this.#post<GetSearchResponse>('/search', params as unknown as Record<string, string>);
 
     return response;
@@ -295,6 +306,12 @@ export class ApiService {
 
   async getAnnouncements() {
     return this.#get<GetAnnouncementsResponse>('/announcements');
+  }
+
+  // Returns the raw JSON body — the capabilities store validates it at the
+  // trust boundary, treating anything malformed as non-conformance.
+  async getCapabilities() {
+    return this.#get<object>('/capabilities');
   }
 
   async acceptTerms(id: number) {

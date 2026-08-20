@@ -16,41 +16,13 @@ const emit = defineEmits<{
   isActive: [];
 }>();
 
-const parseTimestampRangeToYear = (rangeString: string) => {
-  // Format: "YYYY-01-01T00:00:00.000Z TO YYYY-12-31T23:59:59.999Z"
-  const match = rangeString.match(/^(\d{4})-/);
-
-  return match?.[1];
-};
-
-const yearToTimestampRange = (year: string): string => {
-  return `${year}-01-01T00:00:00.000Z TO ${year}-12-31T23:59:59.999Z`;
-};
-
-const parseInitialYears = (values: string[] | undefined): Set<string> => {
-  if (!values) {
-    return new Set();
-  }
-
-  const years = new Set<string>();
-
-  for (const value of values) {
-    const year = parseTimestampRangeToYear(value);
-    if (year) {
-      years.add(year);
-    }
-  }
-
-  return years;
-};
-
 const expandedDecades = ref<Set<string>>(new Set());
-const selectedYears = ref<Set<string>>(parseInitialYears(props.initialSelectedFacetValues));
+const selectedYears = ref<Set<string>>(new Set(props.initialSelectedFacetValues));
 
 watch(
   () => props.initialSelectedFacetValues,
   (newValues) => {
-    selectedYears.value = parseInitialYears(newValues);
+    selectedYears.value = new Set(newValues);
   },
 );
 
@@ -99,13 +71,11 @@ const toggleYear = (year: Bucket) => {
   updateFacet();
 };
 
-// Emit updated selection
 const updateFacet = () => {
-  // Convert years to ISO timestamp ranges
-  const timestampRanges = Array.from(selectedYears.value).map((year) => yearToTimestampRange(year));
-  emit('updated', props.facetName, timestampRanges);
+  const years = Array.from(selectedYears.value);
+  emit('updated', props.facetName, years);
 
-  if (timestampRanges.length > 0) {
+  if (years.length > 0) {
     emit('isActive');
   }
 };

@@ -508,8 +508,18 @@ Configure Dublin Core metadata tags for SEO and discovery.
 
 Configure which fields can be used for faceted filtering in search results.
 
+The whole `ui.aggregations` block is optional. When it is omitted, the portal
+shows every facet the archive declares in `GET /capabilities` under
+`search.facets`, in declaration order, using each facet's declared label
+(falling back to a start-cased version of the field name, with
+`ui.textReplacements` applied). An empty array deliberately shows no facets.
+Configure aggregations only when you want to curate the facet list — rename,
+reorder or drop facets, add help text, expand a facet by default, or use a
+`date_histogram` facet.
+
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
+| `ui.aggregations` | array | No | Facet definitions; omit to show every facet declared by `GET /capabilities` |
 | `ui.aggregations[].display` | string | Yes | Display name for the facet |
 | `ui.aggregations[].name` | string | Yes | Field name to aggregate on |
 | `ui.aggregations[].help` | string | No | Help text for the facet |

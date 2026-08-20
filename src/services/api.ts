@@ -238,14 +238,18 @@ export class ApiService {
     return response;
   }
 
+  #getEntityMetadata(id: string) {
+    return this.#get<object | ErrorResponse>(`/entity/${encodeURIComponent(id)}/metadata`);
+  }
+
   async getRoCrateJSON(id: string) {
-    const crateJson = await this.#get<object | ErrorResponse>(`/entity/${encodeURIComponent(id)}/rocrate`);
+    const crateJson = await this.#getEntityMetadata(id);
 
     return JSON.stringify(crateJson);
   }
 
   async getRoCrate(id: string) {
-    const crateJson = await this.#get<object | ErrorResponse>(`/entity/${encodeURIComponent(id)}/rocrate`);
+    const crateJson = await this.#getEntityMetadata(id);
 
     if ('error' in crateJson) {
       return { error: crateJson.error };

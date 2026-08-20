@@ -3,12 +3,16 @@ import type { TableInstance } from 'element-plus';
 import { computed, nextTick, ref, watch } from 'vue';
 import EafTimelineView from '@/components/widgets/EafTimelineView.vue';
 import { type EafDocument, parseEaf } from '@/composables/useEafParser';
+import { formatTimecode, matchAnnotation } from '@/segments';
 
 const props = defineProps<{
   src: string;
   currentTime?: number;
   showHeader?: boolean;
   duration?: number;
+  // Deep-link arrival: pre-select this tier and highlight the annotation starting at matchStartMs
+  initialTier?: string;
+  matchStartMs?: number;
 }>();
 
 const viewMode = ref<'table' | 'timeline'>('timeline');
@@ -66,8 +70,9 @@ const fetchAndParse = async (url: string) => {
     const xml = await response.text();
     eafDoc.value = parseEaf(xml);
     const nonEmpty = tiers.value;
-    if (nonEmpty.length > 0) {
-      selectedTierIds.value = [nonEmpty[0].tierId];
+    const initial = nonEmpty.find((t) => t.tierId === props.initialTier) ?? nonEmpty[0];
+    if (initial) {
+      selectedTierIds.value = [initial.tierId];
     }
   } finally {
     loading.value = false;
@@ -85,14 +90,6 @@ watch(
 );
 
 const currentTimeMs = computed(() => (props.currentTime ?? -1) * 1000);
-
-const formatTime = (ms: number): string => {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const millis = Math.floor((ms % 1000) / 10);
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(2, '0')}`;
-};
 
 const isActive = (startMs: number, endMs: number): boolean => {
   if (props.currentTime === undefined) {
@@ -112,47 +109,81 @@ const activeRowIndex = computed(() => {
   return mergedRows.value.findIndex((r) => isActive(r.startMs, r.endMs));
 });
 
+// The annotation a search deep link pointed at; highlighted persistently
+const matchedRow = computed(() => {
+  if (props.matchStartMs === undefined) {
+    return null;
+  }
+
+  return matchAnnotation(mergedRows.value, props.matchStartMs);
+});
+
+const matchedRowIndex = computed(() => (matchedRow.value ? mergedRows.value.indexOf(matchedRow.value) : -1));
+
+const scrollToRow = (index: number) => {
+  if (index < 0) {
+    return;
+  }
+
+  const tableEl = tableRef.value?.$el as HTMLElement | undefined;
+  if (!tableEl) {
+    return;
+  }
+
+  // Element Plus uses el-scrollbar inside the body wrapper
+  const scrollViewport = tableEl.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') as HTMLElement | null;
+  const rows = tableEl.querySelectorAll('.el-table__body tbody tr');
+  if (!scrollViewport || !rows?.[index]) {
+    return;
+  }
+
+  const row = rows[index] as HTMLElement;
+  const viewportHeight = scrollViewport.clientHeight;
+  const rowTop = row.offsetTop;
+  const rowBottom = rowTop + row.offsetHeight;
+  const scrollTop = scrollViewport.scrollTop;
+  const scrollBottom = scrollTop + viewportHeight;
+
+  // If row is outside visible area, scroll to centre it
+  if (rowBottom > scrollBottom || rowTop < scrollTop) {
+    scrollViewport.scrollTo({
+      top: rowTop - viewportHeight / 2,
+      behavior: 'smooth',
+    });
+  }
+};
+
 watch(activeRowIndex, (index) => {
   if (index < 0) {
     return;
   }
 
-  nextTick(() => {
-    const tableEl = tableRef.value?.$el as HTMLElement | undefined;
-    if (!tableEl) {
-      return;
-    }
-
-    // Element Plus uses el-scrollbar inside the body wrapper
-    const scrollViewport = tableEl.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') as HTMLElement | null;
-    const rows = tableEl.querySelectorAll('.el-table__body tbody tr');
-    if (!scrollViewport || !rows?.[index]) {
-      return;
-    }
-
-    const row = rows[index] as HTMLElement;
-    const viewportHeight = scrollViewport.clientHeight;
-    const rowTop = row.offsetTop;
-    const rowBottom = rowTop + row.offsetHeight;
-    const scrollTop = scrollViewport.scrollTop;
-    const scrollBottom = scrollTop + viewportHeight;
-
-    // If row is outside visible area, scroll to centre it
-    if (rowBottom > scrollBottom || rowTop < scrollTop) {
-      scrollViewport.scrollTo({
-        top: rowTop - viewportHeight / 2,
-        behavior: 'smooth',
-      });
-    }
-  });
+  nextTick(() => scrollToRow(index));
 });
+
+// Scroll the deep-linked match into view once it appears in the rendered table
+watch(
+  matchedRowIndex,
+  (index) => {
+    nextTick(() => scrollToRow(index));
+  },
+  { once: true },
+);
 
 const handleRowClick = (row: MergedRow) => {
   emit('seek', row.startMs / 1000);
 };
 
 const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) => {
-  return rowIndex === activeRowIndex.value ? 'eaf-active-row' : '';
+  if (rowIndex === activeRowIndex.value) {
+    return 'eaf-active-row';
+  }
+
+  if (rowIndex === matchedRowIndex.value) {
+    return 'eaf-matched-row';
+  }
+
+  return '';
 };
 </script>
 
@@ -202,17 +233,17 @@ const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) =
 
     <div v-if="canShowTimeline && viewMode === 'timeline'">
       <EafTimelineView :tiers="selectedTiers" :current-time-ms="currentTimeMs" :duration="props.duration! * 1000"
-        @seek="(s) => emit('seek', s)" />
+        :match="matchedRow ?? undefined" @seek="(s) => emit('seek', s)" />
     </div>
 
     <div v-else style="height: 400px;">
       <el-table ref="tableRef" :data="mergedRows" :row-class-name="tableRowClassName" @row-click="handleRowClick"
         class="cursor-pointer" height="100%">
         <el-table-column label="Start" width="120">
-          <template #default="{ row }">{{ formatTime(row.startMs) }}</template>
+          <template #default="{ row }">{{ formatTimecode(row.startMs, { fraction: true }) }}</template>
         </el-table-column>
         <el-table-column label="End" width="120">
-          <template #default="{ row }">{{ formatTime(row.endMs) }}</template>
+          <template #default="{ row }">{{ formatTimecode(row.endMs, { fraction: true }) }}</template>
         </el-table-column>
         <el-table-column label="Text">
           <template #default="{ row }">
@@ -231,5 +262,9 @@ const tableRowClassName = ({ rowIndex }: { row: MergedRow; rowIndex: number }) =
 .eaf-active-row {
   --el-table-tr-bg-color: var(--el-color-primary-light-8);
   font-weight: bold;
+}
+
+.eaf-matched-row {
+  --el-table-tr-bg-color: var(--el-color-warning-light-8);
 }
 </style>

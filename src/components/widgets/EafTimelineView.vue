@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { EafTier } from '@/composables/useEafParser';
+import type { AnnotationInterval } from '@/segments';
 
 const props = defineProps<{
   tiers: EafTier[];
   currentTimeMs: number;
   duration: number;
+  // Deep-linked annotation interval to highlight and scroll into view
+  match?: AnnotationInterval;
 }>();
 
 const emit = defineEmits<{
@@ -127,6 +130,9 @@ watch(
   },
 );
 
+const isMatch = (ann: { startMs: number; endMs: number }): boolean =>
+  props.match !== undefined && ann.startMs === props.match.startMs && ann.endMs === props.match.endMs;
+
 let resizeObserver: ResizeObserver | undefined;
 
 onMounted(() => {
@@ -138,6 +144,16 @@ onMounted(() => {
       }
     });
     resizeObserver.observe(containerRef.value);
+  }
+
+  // Scroll the deep-linked match into view (after the measured width has
+  // settled so the px-per-ms scale is right)
+  if (props.match) {
+    const { startMs } = props.match;
+    nextTick(() => {
+      const scrollableWidth = containerWidth.value - TIER_LABEL_WIDTH;
+      containerRef.value?.scrollTo({ left: Math.max(0, startMs * pxPerMs.value - scrollableWidth / 3) });
+    });
   }
 });
 
@@ -172,7 +188,8 @@ onUnmounted(() => {
         </div>
 
         <div class="eaf-tier__track" :style="{ height: `${TIER_ROW_HEIGHT}px` }">
-          <div v-for="ann in tier.annotations" :key="ann.id" class="eaf-annotation" :style="{
+          <div v-for="ann in tier.annotations" :key="ann.id" class="eaf-annotation"
+            :class="{ 'eaf-annotation--matched': isMatch(ann) }" :style="{
             left: `${ann.startMs * pxPerMs}px`,
             width: `${Math.max((ann.endMs - ann.startMs) * pxPerMs, 3)}px`,
             '--ann-bg': tier.colour.bg,
@@ -347,6 +364,11 @@ onUnmounted(() => {
 
 .eaf-annotation:hover .eaf-annotation__text {
   overflow: visible;
+}
+
+.eaf-annotation--matched {
+  box-shadow: 0 0 0 2px #f59e0b;
+  z-index: 10;
 }
 
 .eaf-playhead {

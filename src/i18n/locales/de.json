@@ -210,8 +210,13 @@
     "files": "Dateien:",
     "in": "In:",
     "memberOf": "Mitglied von:",
+    "moreMatches": "+{n} weitere Treffer",
     "objects": "Objekte:",
     "relevanceScore": "Relevanzbewertung:",
     "type": "Typ:"
+  },
+  "file": {
+    "play": "In {name} abspielen",
+    "playFrom": "In {name} ab {time} abspielen"
   }
 }

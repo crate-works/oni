@@ -210,8 +210,13 @@
     "files": "Files:",
     "in": "In:",
     "memberOf": "Member of:",
+    "moreMatches": "+{n} more matches",
     "objects": "Objects:",
     "relevanceScore": "Relevance Score:",
     "type": "Type:"
+  },
+  "file": {
+    "play": "Play in {name}",
+    "playFrom": "Play in {name} from {time}"
   }
 }

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
+import { clampPage } from '@/segments';
 
-const { src } = defineProps<{
+const { src, initialPage } = defineProps<{
   src: string;
+  // Clamped into the document's page range once the page count is known
+  initialPage?: number;
 }>();
 
 const MIN_ZOOM = 0.5;
@@ -78,6 +81,11 @@ watch(
 const onLoaded = (doc: { numPages?: number }) => {
   numPages.value = doc?.numPages ?? 0;
   status.value = 'ready';
+
+  const startPage = initialPage !== undefined ? clampPage(initialPage, numPages.value) : null;
+  if (startPage !== null) {
+    page.value = startPage;
+  }
 };
 
 const onFailed = () => {

@@ -105,6 +105,7 @@ jobs:
         run: |
           echo "image_name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
           echo "major_minor=${VERSION%.*}" >> "$GITHUB_OUTPUT"
+          echo "major=${VERSION%%.*}" >> "$GITHUB_OUTPUT"
 
       - name: Download digests
         uses: actions/download-artifact@v8
@@ -131,6 +132,7 @@ jobs:
           tags: |
             type=raw,value=${{ inputs.version }}
             type=raw,value=${{ steps.prepare.outputs.major_minor }}
+            type=raw,value=${{ steps.prepare.outputs.major }}
             type=raw,value=latest
 
       - name: Create manifest list and push

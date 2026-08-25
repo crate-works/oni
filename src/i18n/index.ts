@@ -3,7 +3,7 @@ import { createI18n } from 'vue-i18n';
 
 import { ui } from '@/configuration';
 
-const { urlPrefix = '' } = ui;
+const assetPrefix = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 type Locale = string;
 type Messages = Record<string, Record<string, string>>;
@@ -36,7 +36,7 @@ const localeMerge = (target: Messages, source: Messages): Messages => {
 
 const loadRuntimeLocale = async (locale: Locale): Promise<Messages | null> => {
   try {
-    const response = await fetch(`${urlPrefix}/i18n/${locale}.json`);
+    const response = await fetch(`${assetPrefix}/i18n/${locale}.json`);
 
     if (!response.ok) {
       return null;

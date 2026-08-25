@@ -105,7 +105,7 @@ const SearchControl = L.Control.extend({
   },
 });
 
-const { mapConfig, urlPrefix } = ui;
+const { mapConfig } = ui;
 
 const geoHashLayer = L.featureGroup();
 const tooltipLayers = L.layerGroup();

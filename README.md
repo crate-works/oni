@@ -134,6 +134,12 @@ A production Docker image is published to Docker Hub
 **[docker/README.md](docker/README.md)** for image tags, the expected
 configuration mount point, nginx customisation, and health-check details.
 
+### Deploying Under a Base Path
+
+See the [base-path deployment instructions](docs/configuration.md#base-path-deployment)
+for configuring `VITE_BASE_PATH` and serving Oni from a subdirectory such as
+`/oni/`.
+
 ## Contributing
 
 - Follow [**Conventional Commits**](https://www.conventionalcommits.org) — enforced on every commit by commitlint.

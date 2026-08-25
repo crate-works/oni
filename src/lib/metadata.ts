@@ -43,10 +43,9 @@ const resolveMetadataMappingUrl = (mappingFile: string) => {
     return mappingFile;
   }
 
-  const normalizedPath = mappingFile.startsWith('/') ? mappingFile : `/${mappingFile}`;
-  const prefix = ui.urlPrefix.endsWith('/') ? ui.urlPrefix.slice(0, -1) : ui.urlPrefix;
+  const normalizedPath = mappingFile.replace(/^\/+/, '');
 
-  return `${prefix}${normalizedPath}`;
+  return `${import.meta.env.BASE_URL}${normalizedPath}`;
 };
 
 const loadMetadataMapping = async () => {

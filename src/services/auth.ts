@@ -181,7 +181,7 @@ export const login = async () => {
     const path = window.location.pathname.startsWith(baseUrl)
       ? window.location.pathname.slice(baseUrl.length)
       : window.location.pathname;
-    const returnUrl = `/${path}` + window.location.search;
+    const returnUrl = `/${path}${window.location.search}`;
 
     await userManager.signinRedirect({ state: { returnUrl } });
   } catch {

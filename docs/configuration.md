@@ -11,6 +11,7 @@ at the repo root.
 - [Configuration](#configuration)
   - [Contents](#contents)
   - [Configuration Structure](#configuration-structure)
+  - [Base Path Deployment](#base-path-deployment)
   - [UI Configuration](#ui-configuration)
     - [Branding and Identity](#branding-and-identity)
     - [Management](#management)
@@ -21,7 +22,7 @@ at the repo root.
     - [Terms, Privacy, and Footer](#terms-privacy-and-footer)
     - [Search Configuration](#search-configuration)
     - [Main Data Display](#main-data-display)
-    - [Text Replacements](#text-replacements)
+    - [Metadata Mapping](#metadata-mapping)
     - [Metadata Display Configuration](#metadata-display-configuration)
       - [Filter Mode](#filter-mode)
       - [Explicit Mode](#explicit-mode)
@@ -48,6 +49,42 @@ The configuration file has two main sections:
 - **`ui`**: User interface settings, branding, navigation, search, metadata
       display, and features
 - **`api`**: API endpoint configuration for the RO-Crate API.
+
+## Base Path Deployment
+
+Oni can be served from a subdirectory, such as `/oni/`. Configure the Vite
+base path in a root-level `.env` file for local development:
+
+```env
+VITE_BASE_PATH=/oni/
+```
+
+For production, use `.env.production` or set `VITE_BASE_PATH` in the build
+environment:
+
+```sh
+VITE_BASE_PATH=/oni/ pnpm build
+```
+
+`VITE_BASE_PATH` is a build-time setting. Vite generates
+`import.meta.env.BASE_URL` from it; `BASE_URL` should not be configured
+directly. The resulting `dist` directory must be served under `/oni/`, with
+history fallback to `index.html` and the following files available below that
+prefix:
+
+```text
+/oni/configuration.json
+/oni/i18n/en.json
+/oni/assets/...
+```
+
+`VITE_BASE_PATH` is the only base-path setting; runtime paths such as locale files, metadata mapping
+files, and OAuth callbacks use Vite's generated `BASE_URL`.
+
+The optional `VITE_ONI_CONFIG_PATH` variable overrides the default
+configuration location. For example, use
+`VITE_ONI_CONFIG_PATH=/oni/configuration.json` when the configuration is not
+served at the default Vite base path.
 
 ## UI Configuration
 

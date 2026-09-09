@@ -134,17 +134,6 @@ A production Docker image is published to Docker Hub
 **[docker/README.md](docker/README.md)** for image tags, the expected
 configuration mount point, nginx customisation, and health-check details.
 
-### Deploying Under a Base Path
-
-See the [base-path deployment instructions](docs/configuration.md#base-path-deployment)
-for configuring `VITE_BASE_PATH` and serving Oni from a subdirectory such as
-`/oni/`.
-
-> Note: this is a build-time configuration. The prebuilt Docker images in the
-> registry are built with the default root path, so they will not support a custom
-> base path unless you rebuild the image yourself with the appropriate
-> `VITE_BASE_PATH` value baked in.
-
 ## Contributing
 
 - Follow [**Conventional Commits**](https://www.conventionalcommits.org) — enforced on every commit by commitlint.

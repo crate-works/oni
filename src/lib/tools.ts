@@ -79,28 +79,20 @@ export const parseContentSize = (value: string | number) => {
   return number * (unitMultipliers[unit as keyof typeof unitMultipliers] || 1);
 };
 
-export const getBasePathUrl = (path: string) => {
-  const base = import.meta.env.BASE_URL || '/';
-  const normalizedBase = base === '/' ? '' : base.replace(/\/+$/, '');
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  return `${normalizedBase}${normalizedPath}`;
-};
-
 export const getEntityUrl = (entity: EntityType) => {
   const { entityType } = entity;
   const id = encodeURIComponent(entity.id);
   switch (entityType) {
     case 'http://pcdm.org/models#Collection':
-      return getBasePathUrl(`/collection?id=${id}`);
+      return `/collection?id=${id}`;
     case 'http://pcdm.org/models#Object':
-      return getBasePathUrl(`/object?id=${id}`);
+      return `/object?id=${id}`;
     case 'http://schema.org/Person':
-      return getBasePathUrl(`/person?id=${id}`);
+      return `/person?id=${id}`;
     case 'http://schema.org/MediaObject':
-      return getBasePathUrl(`/file?id=${id}`);
+      return `/file?id=${id}`;
     default:
-      return getBasePathUrl(`/entity?id=${id}`);
+      return `/entity?id=${id}`;
   }
 };
 

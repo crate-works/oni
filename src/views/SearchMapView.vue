@@ -14,7 +14,7 @@ import SearchLayout from '@/components/SearchLayout.vue';
 import { LocationDivIcon, NumberedDivIcon } from '@/components/widgets/geo_types';
 import { useSearch } from '@/composables/search';
 import { ui } from '@/configuration';
-import { getBasePathUrl, getEntityUrl } from '@/lib/tools';
+import { getEntityUrl } from '@/lib/tools';
 import type { ApiService, EntityType, SearchParams } from '@/services/api';
 
 const {
@@ -105,7 +105,7 @@ const SearchControl = L.Control.extend({
   },
 });
 
-const { mapConfig } = ui;
+const { mapConfig, urlPrefix } = ui;
 
 const geoHashLayer = L.featureGroup();
 const tooltipLayers = L.layerGroup();
@@ -305,12 +305,11 @@ const getInnerHTMLTooltip = (entity: EntityType) => {
   `;
 
   if (entity.memberOf) {
-    const memberOfHref = getBasePathUrl(`/collection?id=${encodeURIComponent(entity.memberOf.id)}`);
     const innerHTMLMemberOf = `
       <a
         class="text-sm m-1 text-gray-700 underline"
-        href="${memberOfHref}"
-        data-route="${memberOfHref}"
+        href="/collection?id=${encodeURIComponent(entity.memberOf.id)}"
+        data-route="/collection?id=${encodeURIComponent(entity.memberOf.id)}"
       >
         ${entity.memberOf.name || entity.memberOf.id}
       </a>

@@ -14,7 +14,7 @@ import SearchLayout from '@/components/SearchLayout.vue';
 import { LocationDivIcon, NumberedDivIcon } from '@/components/widgets/geo_types';
 import { useSearch } from '@/composables/search';
 import { ui } from '@/configuration';
-import { getEntityUrl } from '@/lib/tools';
+import { getBasePathUrl, getEntityUrl } from '@/lib/tools';
 import type { ApiService, EntityType, SearchParams } from '@/services/api';
 
 const {
@@ -105,7 +105,7 @@ const SearchControl = L.Control.extend({
   },
 });
 
-const { mapConfig, urlPrefix } = ui;
+const { mapConfig } = ui;
 
 const geoHashLayer = L.featureGroup();
 const tooltipLayers = L.layerGroup();
@@ -295,21 +295,24 @@ const getInnerHTMLTooltip = (entity: EntityType) => {
   const title = entity.identifiers?.shortIdentifier ? `${entity.identifiers.shortIdentifier} - ${name}` : name;
   const type = entity.entityType;
   const href = getEntityUrl(entity);
+  const clickableHref = getBasePathUrl(href);
 
   let innerHTML = `
     <div>
       <h3 class="mb-2 mt-1 text-2xl">
-        <a href="${href}" data-route="${href}">${title}</a>
+        <a href="${clickableHref}" data-route="${href}">${title}</a>
       </h3>
       <h4>Type: ${type}</h4>
   `;
 
   if (entity.memberOf) {
+    const memberOfRoute = `/collection?id=${encodeURIComponent(entity.memberOf.id)}`;
+    const memberOfHref = getBasePathUrl(memberOfRoute);
     const innerHTMLMemberOf = `
       <a
         class="text-sm m-1 text-gray-700 underline"
-        href="/collection?id=${encodeURIComponent(entity.memberOf.id)}"
-        data-route="/collection?id=${encodeURIComponent(entity.memberOf.id)}"
+        href="${memberOfHref}"
+        data-route="${memberOfRoute}"
       >
         ${entity.memberOf.name || entity.memberOf.id}
       </a>
@@ -328,7 +331,7 @@ const getInnerHTMLTooltip = (entity: EntityType) => {
 
   innerHTML += `
         <p class="justify-self-end">
-          <a href="${href}" data-route="${href}">See more</a>
+          <a href="${clickableHref}" data-route="${href}">See more</a>
         </p>
       </div>
     </div>

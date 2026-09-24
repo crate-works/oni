@@ -130,8 +130,6 @@ const handleSeek = (seconds: number) => {
   }
 };
 
-const extension = (first(metadata.filename) || '').split('.').pop() || '';
-
 enum PreviewerType {
   pdf,
   csv,
@@ -142,6 +140,29 @@ enum PreviewerType {
   image,
   other,
 }
+const supportedMime: Record<string, string> = {
+  csv: 'text/csv',
+  eaf: 'application/xml',
+  txt: 'text/plain',
+  html: 'text/html',
+  xml: 'application/xml',
+  pdf: 'application/pdf',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  apng: 'image/apng',
+  avif: 'image/avif',
+  webp: 'image/webp',
+  mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
+  wav: 'audio/wav',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+};
+
+const extension = filename.value.split('.').pop()?.toLowerCase() || '';
 
 // detect type from encoding format first
 let [previewerType, encodingFormat] = (() => {
@@ -151,13 +172,17 @@ let [previewerType, encodingFormat] = (() => {
     : typeof rawEncodingFormat === 'string'
       ? [rawEncodingFormat]
       : [];
-
+  encodingFormats.push(supportedMime[extension] || 'application/octet-stream');
+  if (extension === 'eaf') {
+    return [PreviewerType.eaf, 'application/xml'];
+  } else if (['xml', 'flab'].includes(extension)) {
+    return [PreviewerType.text, 'application/xml'];
+  }
   for (const raw of encodingFormats) {
     if (typeof raw !== 'string') {
       continue;
     }
     const format = raw.toLowerCase();
-
     for (const suffix of ['pdf', 'csv']) {
       if (format.endsWith(suffix)) {
         return [PreviewerType[suffix as keyof typeof PreviewerType], raw];
@@ -169,20 +194,9 @@ let [previewerType, encodingFormat] = (() => {
       }
     }
   }
-  return [PreviewerType.other, ''];
+  return [PreviewerType.other, 'application/octet-stream'];
 })();
-// detect type from file extension as fallback
-if (previewerType === PreviewerType.other || previewerType === PreviewerType.text) {
-  if (extension === 'csv') {
-    previewerType = PreviewerType.csv;
-  } else if (extension === 'eaf') {
-    previewerType = PreviewerType.eaf;
-  } else if (previewerType === PreviewerType.other && ['txt', 'html', 'xml', 'flab'].includes(extension)) {
-    previewerType = PreviewerType.text;
-  } else if (previewerType === PreviewerType.other && extension === 'pdf') {
-    previewerType = PreviewerType.pdf;
-  }
-}
+
 const mediaTag = PreviewerType[previewerType as number] as 'audio' | 'video';
 const mediaType = encodingFormat;
 

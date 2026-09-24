@@ -9,7 +9,7 @@ const { t } = useI18n();
 
 const { access, license } = defineProps<{
   access: EntityType['access'];
-  license: RoCrate['license'];
+  license?: RoCrate['license'];
 }>();
 
 import { storeToRefs } from 'pinia';

@@ -130,3 +130,61 @@ export const formatDuration = (seconds: number) => {
 
   return parts.length > 0 ? parts.join(' ') : '0s';
 };
+
+const exactMediaTypeIcons: Record<string, string> = {
+  'text/csv': 'file-csv',
+  'application/zip': 'file-zipper',
+  'application/pdf': 'file-pdf',
+  'application/msword': 'file-word',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'file-word',
+  'application/x-ipynb+json': 'clipboard',
+  'application/mp4': 'file-video',
+  'application/mxf': 'file-video',
+  'application/json': 'file-code',
+};
+
+const mediaTypeIcon = (mediaType: string) => {
+  const exact = exactMediaTypeIcons[mediaType];
+  if (exact) {
+    return exact;
+  }
+
+  if (mediaType.startsWith('video')) {
+    return 'file-video';
+  }
+
+  if (mediaType.startsWith('audio')) {
+    return 'file-audio';
+  }
+
+  if (mediaType.startsWith('image')) {
+    return 'file-image';
+  }
+
+  if (mediaType.startsWith('text')) {
+    return 'file-lines';
+  }
+
+  if (mediaType.includes('xml')) {
+    return 'file-code';
+  }
+
+  console.log(`Need mediaType icon for ${mediaType}`);
+
+  return 'file';
+};
+
+export const groupMediaTypesByIcon = (mediaTypes: string[]) => {
+  const groups = new Map<string, string[]>();
+  for (const mediaType of new Set(mediaTypes)) {
+    const icon = mediaTypeIcon(mediaType);
+    const group = groups.get(icon);
+    if (group) {
+      group.push(mediaType);
+    } else {
+      groups.set(icon, [mediaType]);
+    }
+  }
+
+  return [...groups].map(([icon, types]) => ({ icon, mediaTypes: types }));
+};

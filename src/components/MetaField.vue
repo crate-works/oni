@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import FieldHelperCard from '@/components/cards/FieldHelperCard.vue';
 import ElasticField from '@/components/ElasticField.vue';
-import { defaultPageSize, ui } from '@/configuration';
+import { usePagination } from '@/composables/usePagination';
+import { ui } from '@/configuration';
 import { startCase } from '@/lib/metadata';
 import { first } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
@@ -13,9 +14,6 @@ const { meta, isExpand } = defineProps<{
   meta: { name: string; data: RoCrate[keyof RoCrate] };
   isExpand?: boolean;
 }>();
-
-const currentPage = ref(1);
-const pageSize = ref(defaultPageSize);
 
 const name = computed(() => meta.name);
 const data = computed(() => meta.data);
@@ -32,14 +30,9 @@ const sortedData = computed(() => {
   return meta.data;
 });
 
-const paginatedMetaData = computed(() => {
-  if (Array.isArray(sortedData.value) && sortedData.value.length > pageSize.value) {
-    const start = (currentPage.value - 1) * pageSize.value;
-    return sortedData.value.slice(start, start + pageSize.value);
-  }
-
-  return sortedData.value;
-});
+const { currentPage, pageSize, pageItems } = usePagination(() =>
+  Array.isArray(sortedData.value) ? (sortedData.value as unknown[]) : [],
+);
 </script>
 
 <template>
@@ -61,7 +54,7 @@ const paginatedMetaData = computed(() => {
       </el-col>
       <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
         <template v-if="Array.isArray(sortedData)">
-          <ElasticField :field="d" :title="name" :key="d as string" v-for="d of paginatedMetaData" />
+          <ElasticField :field="d" :title="name" :key="d as string" v-for="d of pageItems" />
           <el-pagination v-if="(sortedData as unknown[]).length > pageSize" class="mt-4"
             layout="sizes, prev, pager, next" :total="(sortedData as unknown[]).length"
             :page-sizes="ui.pagination.pageSizes" v-model:page-size="pageSize" :current-page="currentPage"

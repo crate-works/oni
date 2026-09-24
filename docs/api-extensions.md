@@ -51,7 +51,7 @@ this project's extensions — they are documented in full in
 ## Which extensions you need
 
 Which extensions a backend must implement depends on the frontend's
-`public/configuration.json`. Use this table to scope the work.
+`configuration.json`. Use this table to scope the work.
 
 | If `configuration.json` has…                                          | You must implement                                                              |
 |-----------------------------------------------------------------------|---------------------------------------------------------------------------------|

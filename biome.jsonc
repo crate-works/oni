@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!**/package.json", "!**/vocab.json", "!public/configuration.json"]
+    "includes": ["**", "!**/package.json", "!**/vocab.json"]
   },
   "formatter": {
     "enabled": true,

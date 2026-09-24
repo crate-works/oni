@@ -68,7 +68,27 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=buildkit-${{ steps.prepare.outputs.pair }}
           cache-to: type=gha,mode=max,scope=buildkit-${{ steps.prepare.outputs.pair }}
-          outputs: ${{ github.event_name != 'pull_request' && format('type=image,"name={0}/{1}",push-by-digest=true,name-canonical=true,push=true', env.GHCR_REGISTRY, steps.prepare.outputs.image_name) || '' }}
+          outputs: ${{ github.event_name != 'pull_request' && format('type=image,"name={0}/{1}",push-by-digest=true,name-canonical=true,push=true', env.GHCR_REGISTRY, steps.prepare.outputs.image_name) || (matrix.platform == 'linux/amd64' && 'type=docker,name=oni-test' || '') }}
+
+      - name: Check configuration overrides
+        if: github.event_name == 'pull_request' && matrix.platform == 'linux/amd64'
+        run: |
+          echo '{"api":{"rocrate":{"endpoint":"https://base.example.test"}},"ui":{"title":"Oni"}}' > "${RUNNER_TEMP}/configuration.json"
+          docker run -d --name oni --read-only --tmpfs /run --tmpfs /var/cache/nginx -p 8080:80 \
+            -v "${RUNNER_TEMP}/configuration.json:/configuration.json:ro" \
+            -e ONI_API_ENDPOINT=https://api.example.test \
+            -e ONI_SENTRY_ENVIRONMENT=staging \
+            -e ONI_OIDC_CLIENT_ID= \
+            oni-test
+
+          expected='{"api":{"rocrate":{"endpoint":"https://api.example.test"}},"ui":{"sentry":{"environment":"staging"},"title":"Oni"}}'
+          actual=$(curl -sf --retry 10 --retry-connrefused --retry-delay 1 http://localhost:8080/configuration.json | jq -cS .)
+          if [ "$actual" != "$expected" ]; then
+            echo "Expected $expected"
+            echo "     got $actual"
+            docker logs oni
+            exit 1
+          fi
 
       - name: Export digest
         if: github.event_name != 'pull_request'

@@ -1,0 +1,8 @@
+{
+  "ONI_API_ENDPOINT": ["api", "rocrate", "endpoint"],
+  "ONI_OIDC_ENDPOINT": ["api", "oidc", "endpoint"],
+  "ONI_OIDC_CLIENT_ID": ["api", "oidc", "clientId"],
+  "ONI_SENTRY_DSN": ["ui", "sentry", "dsn"],
+  "ONI_SENTRY_ENVIRONMENT": ["ui", "sentry", "environment"],
+  "ONI_GA_MEASUREMENT_ID": ["ui", "analytics", "gaMeasurementId"]
+}

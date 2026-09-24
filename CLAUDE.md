@@ -2,11 +2,11 @@
 
 ## Overview
 
-oni-ui is a Vue 3 + TypeScript discovery portal for browsing research metadata in RO-Crate format. The UI is configuration-driven — search fields, facets, metadata display, branding, and navigation are all controlled by `/public/configuration.json`, validated at runtime with Zod.
+oni-ui is a Vue 3 + TypeScript discovery portal for browsing research metadata in RO-Crate format. The UI is configuration-driven — search fields, facets, metadata display, branding, and navigation are all controlled by `/configuration.json`, validated at runtime with Zod.
 
 ## Commands
 
-- `pnpm dev` — start dev server (Vite, port 5173)
+- `pnpm dev` — start dev server (Vite, port 5173) against PARADISEC staging; `pnpm dev:<target>` for `paradisec-stage`, `paradisec`, `ldaca-dev`, `local` (a local config file)
 - `pnpm build` — production build (type-check + vite build in parallel)
 - `pnpm test:unit` — run tests (Vitest with jsdom)
 - `pnpm lint:biome` — lint and format check (Biome)
@@ -40,7 +40,11 @@ Vue 3 (Composition API, `<script setup>`) + TypeScript + Vite + Tailwind CSS 4 +
 
 ### Configuration
 
-`/public/configuration.json` is loaded at startup and validated against the Zod schema in `src/configuration.ts`. When adding, removing, or changing configuration options, update `docs/configuration.md` to match. It controls:
+`/configuration.json` is loaded at startup and validated against the Zod schema in `src/configuration.ts`. When adding, removing, or changing configuration options, update `docs/configuration.md` to match.
+
+Per-environment values come from `ONI_*` env vars merged over the file — by `docker/entrypoint.sh` in the image and `plugins/oni-dev-config.ts` in the dev server, both driven by the mapping in `docker/overrides.json`. Dev targets are Vite modes (`.env.<target>`) whose `ONI_CONFIG_PATH`/`ONI_ASSETS_PATH` point at each site's live config and assets.
+
+The configuration controls:
 
 - UI branding, navigation, help text
 - Search fields, sort options, faceted aggregations

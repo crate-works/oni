@@ -4,7 +4,12 @@
   "description": "Discovery portal for browsing research data described as RO-Crate.",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "pnpm dev:paradisec-stage",
+    "dev:paradisec-stage": "vite --mode paradisec-stage",
+    "dev:paradisec": "vite --mode paradisec",
+    "dev:ldaca-dev": "vite --mode ldaca-dev",
+    "dev:ldaca": "echo 'Coming soon'",
+    "dev:local": "vite --mode local-config",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",

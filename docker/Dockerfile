@@ -9,20 +9,20 @@ RUN corepack enable && pnpm install --frozen-lockfile
 
 COPY . .
 
-# NOTE: In case we are building locally and have put a file here
-RUN rm -f public/configuration.json
-
 RUN pnpm run build
 
 FROM nginx:alpine
 
 EXPOSE 80
 
+RUN apk add --no-cache jq
+
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/overrides.json /etc/oni/overrides.json
 
-RUN ln -s /configuration.json /usr/share/nginx/html/configuration.json
+RUN ln -s /run/oni/configuration.json /usr/share/nginx/html/configuration.json
 
 RUN mkdir /etc/nginx/oni.d
 

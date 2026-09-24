@@ -1,26 +1,16 @@
-<script setup lang="ts" generic="T">
-import { computed, ref } from 'vue';
-import { defaultPageSize, ui } from '@/configuration';
+<script setup lang="ts">
+import { usePagination } from '@/composables/usePagination';
+import { ui } from '@/configuration';
 
 const { items } = defineProps<{
-  items: T[];
+  items: string[];
 }>();
 
-defineSlots<{
-  default(props: { item: T }): unknown;
-}>();
-
-const currentPage = ref(1);
-const pageSize = ref(defaultPageSize);
-
-const paginatedItems = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return items.slice(start, start + pageSize.value);
-});
+const { currentPage, pageSize, pageItems } = usePagination(() => items);
 </script>
 
 <template>
-  <li v-for="item of paginatedItems" :key="String(item)" class="ml-4 pl-2">
+  <li v-for="item of pageItems" :key="item" class="ml-4 pl-2">
     <slot :item="item" />
   </li>
   <li v-if="items.length > pageSize">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import PaginatedList from '@/components/PaginatedList.vue';
 import type { EntityType } from '@/services/api';
 
 const { t } = useI18n();
@@ -23,7 +24,7 @@ const getSearchUrl = (filterName: string, filterValue: string) => {
   <ul v-if="entity">
     <template v-if="entity.language">
       <li><span class="font-semibold">{{ t('metadata.language') }}</span></li>
-      <li v-for="language in entity.language" class="ml-4 pl-2">{{ language }}</li>
+      <PaginatedList :items="entity.language" v-slot="{ item }">{{ item }}</PaginatedList>
     </template>
 
     <template v-if="entity.communicationMode && entity.communicationMode.length">
@@ -39,13 +40,13 @@ const getSearchUrl = (filterName: string, filterValue: string) => {
 
     <template v-if="entity.mediaType">
       <li><span class="font-semibold">{{ t('summaries.fileFormats') }}</span></li>
-      <li v-for="mediaType in entity.mediaType" class="ml-4 pl-2">
+      <PaginatedList :items="entity.mediaType" v-slot="{ item }">
         <el-link underline="always" type="primary">
-          <router-link :to="getSearchUrl('encodingFormat', mediaType)">
-            {{ mediaType }}
+          <router-link :to="getSearchUrl('encodingFormat', item)">
+            {{ item }}
           </router-link>
         </el-link>
-      </li>
+      </PaginatedList>
     </template>
   </ul>
 </template>

@@ -17,7 +17,8 @@ import MediaTypeIcon from '@/components/widgets/MediaTypeIcon.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
 import { useHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
-import { defaultPageSize, ui } from '@/configuration';
+import { usePagination } from '@/composables/usePagination';
+import { ui } from '@/configuration';
 import { formatFileSize, joinAll } from '@/lib/tools';
 import type { ApiService, EntityType, FileType, GetEntitiesParams, GetFilesParams, RoCrate } from '@/services/api';
 
@@ -43,8 +44,6 @@ const isLoading = ref(false);
 const metadata = ref<RoCrate | undefined>();
 const entity = ref<EntityType | undefined>();
 const allMembers = ref<EntityType[]>([]);
-const currentPage = ref(1);
-const pageSize = ref(defaultPageSize);
 
 const totalMembers = computed(() => allMembers.value.length);
 
@@ -62,11 +61,7 @@ const nextObject = computed(() => {
   return idx >= 0 && idx < allMembers.value.length - 1 ? allMembers.value[idx + 1] : undefined;
 });
 
-const membersFiltered = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-
-  return allMembers.value.slice(start, start + pageSize.value);
-});
+const { currentPage, pageSize, pageItems: membersFiltered } = usePagination(allMembers);
 
 const fetchAllPages = async <T>(
   fetcher: (params: Record<string, string>) => Promise<Record<string, unknown>>,
@@ -168,10 +163,6 @@ const fetchdata = async () => {
   } finally {
     isLoading.value = false;
   }
-};
-
-const updatePage = (page: number) => {
-  currentPage.value = page;
 };
 
 watch(
@@ -325,7 +316,7 @@ fetchdata();
             </ul>
             <el-pagination v-if="totalMembers > pageSize" class="mt-4" background
               layout="sizes, prev, pager, next" :total="totalMembers" :page-sizes="ui.pagination.pageSizes"
-              v-model:page-size="pageSize" v-model:current-page="currentPage" @current-change="updatePage" />
+              v-model:page-size="pageSize" v-model:current-page="currentPage" />
           </el-card>
         </el-col>
       </el-row>

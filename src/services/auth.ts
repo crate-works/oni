@@ -1,6 +1,6 @@
 import { type User, UserManager, type UserManagerSettings, WebStorageStateStore } from 'oidc-client-ts';
 
-import { api, ui } from '@/configuration';
+import { api } from '@/configuration';
 import { useAuthStore } from '@/stores/auth';
 
 declare module 'oidc-client-ts' {
@@ -17,7 +17,6 @@ export type OniUser = {
   accessToken: string;
 };
 
-const { urlPrefix } = ui;
 const clientId = api.oidc?.clientId || 'TODO';
 
 let userManager: UserManager | undefined;
@@ -35,11 +34,10 @@ const getUserManager = async () => {
     return userManager;
   }
 
-  const prefix = urlPrefix || '';
   const config: UserManagerSettings = {
     authority: api.oidc?.endpoint || api.rocrate.endpoint,
     client_id: clientId,
-    redirect_uri: `${window.location.origin}${prefix}/auth/callback`,
+    redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
     scope: api.oidc?.scope || 'public openid profile email',
     response_type: 'code',
     userStore: new WebStorageStateStore({ store: window.localStorage }),
@@ -179,7 +177,11 @@ export const login = async () => {
   try {
     const userManager = await getUserManager();
 
-    const returnUrl = window.location.pathname.replace(new RegExp(`^${urlPrefix}`), '') + window.location.search;
+    const baseUrl = import.meta.env.BASE_URL;
+    const path = window.location.pathname.startsWith(baseUrl)
+      ? window.location.pathname.slice(baseUrl.length)
+      : window.location.pathname;
+    const returnUrl = `/${path}${window.location.search}`;
 
     await userManager.signinRedirect({ state: { returnUrl } });
   } catch {

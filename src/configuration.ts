@@ -164,7 +164,6 @@ const localeCodeSchema = z
   .regex(/^[a-z][a-z0-9-]*$/i, 'locale code must start with a letter and contain only letters, numbers, or hyphens');
 
 const uiSchema = z.strictObject({
-  urlPrefix: z.string().startsWith('/').optional().default(''),
   management: z
     .strictObject({
       editUrl: z.string().optional(),
@@ -280,7 +279,8 @@ const configurationSchema = z.strictObject({
 
 const loadConfig = async () => {
   try {
-    const response = await fetch(import.meta.env.VITE_ONI_CONFIG_PATH || '/configuration.json');
+    const configPath = import.meta.env.VITE_ONI_CONFIG_PATH || `${import.meta.env.BASE_URL}configuration.json`;
+    const response = await fetch(configPath);
 
     if (!response.ok) {
       throw new Error(`Failed to load config: ${response.statusText}`);

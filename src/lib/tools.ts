@@ -79,6 +79,14 @@ export const parseContentSize = (value: string | number) => {
   return number * (unitMultipliers[unit as keyof typeof unitMultipliers] || 1);
 };
 
+export const getBasePathUrl = (path: string) => {
+  const base = import.meta.env.BASE_URL || '/';
+  const normalizedBase = base === '/' ? '' : base.replace(/\/+$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  return `${normalizedBase}${normalizedPath}`;
+};
+
 export const getEntityUrl = (entity: EntityType) => {
   const { entityType } = entity;
   const id = encodeURIComponent(entity.id);

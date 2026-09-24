@@ -21,7 +21,7 @@ at the repo root.
     - [Terms, Privacy, and Footer](#terms-privacy-and-footer)
     - [Search Configuration](#search-configuration)
     - [Main Data Display](#main-data-display)
-    - [Text Replacements](#text-replacements)
+    - [Metadata Mapping](#metadata-mapping)
     - [Metadata Display Configuration](#metadata-display-configuration)
       - [Filter Mode](#filter-mode)
       - [Explicit Mode](#explicit-mode)

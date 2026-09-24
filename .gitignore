@@ -1,6 +1,10 @@
 # Our config
 configuration.json
+configuration.*
+!configuration.sample.json
+
 .env
+.env.*
 
 # Generated files
 vocab.json

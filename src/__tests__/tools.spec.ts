@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseContentSize } from '@/lib/tools';
+import { groupMediaTypesByIcon, parseContentSize } from '@/lib/tools';
 
 describe('parseContentSize', () => {
   it('should return the number itself if it is a valid number and in bytes', () => {
@@ -51,5 +51,34 @@ describe('parseContentSize', () => {
   it('should handle edge cases for numeric parsing', () => {
     expect(parseContentSize('0 GB')).toBe(0); // Zero value
     expect(parseContentSize('0.0001 KB')).toBe(0.0001 * 1024); // Small decimal number
+  });
+});
+
+describe('groupMediaTypesByIcon', () => {
+  it('should collapse media types sharing an icon into one group', () => {
+    expect(
+      groupMediaTypesByIcon([
+        'audio/x-wav',
+        'audio/mpeg',
+        'video/mp4',
+        'application/mxf',
+        'text/plain',
+        'text/csv',
+        'text/x-eaf+xml',
+        'application/pdf',
+      ]),
+    ).toEqual([
+      { icon: 'file-audio', mediaTypes: ['audio/x-wav', 'audio/mpeg'] },
+      { icon: 'file-video', mediaTypes: ['video/mp4', 'application/mxf'] },
+      { icon: 'file-lines', mediaTypes: ['text/plain', 'text/x-eaf+xml'] },
+      { icon: 'file-csv', mediaTypes: ['text/csv'] },
+      { icon: 'file-pdf', mediaTypes: ['application/pdf'] },
+    ]);
+  });
+
+  it('should ignore duplicate media types', () => {
+    expect(groupMediaTypesByIcon(['audio/mpeg', 'audio/mpeg'])).toEqual([
+      { icon: 'file-audio', mediaTypes: ['audio/mpeg'] },
+    ]);
   });
 });

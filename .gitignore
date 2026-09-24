@@ -1,6 +1,6 @@
 # Our config
-configuration.json
 .env
+configuration.local.json
 
 # Generated files
 vocab.json

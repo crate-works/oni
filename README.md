@@ -4,7 +4,7 @@ Oni UI is a discovery portal for browsing research
 metadata served in [RO-Crate](https://www.researchobject.org/ro-crate/) format.
 It is configuration-driven — search fields, facets, metadata display,
 branding, and navigation are all controlled by a single
-`public/configuration.json`, validated at runtime with Zod. The portal is
+`configuration.json`, validated at runtime with Zod. The portal is
 backed by an [`arocapi`](https://github.com/Language-Research-Technology/arocapi)
 RO-Crate API.
 
@@ -36,40 +36,57 @@ This also fetches the LDaC and Schema.org vocabs into `vocab.json` via the
 `postinstall` hook (`scripts/fetch-vocabs.mts`) — no separate vocab step is
 required.
 
-### 2. Create your local configuration
+### 2. Run the dev server against a target
 
 ```sh
-cp configuration.sample.json public/configuration.json
+pnpm dev                     # PARADISEC staging (same as dev:paradisec-stage)
+pnpm dev:paradisec-stage     # PARADISEC staging
+pnpm dev:paradisec           # PARADISEC production
+pnpm dev:ldaca-dev           # LDaCA dev
+pnpm dev:local               # A local configuration file
 ```
 
-`public/configuration.json` is **gitignored** — it is per-developer. The
-running app fetches it at the URL path `/configuration.json`, which Vite
-serves from `public/`. Override the fetch path with the `VITE_ONI_CONFIG_PATH`
-env var if you need to point at a different file.
+Open <http://localhost:5173>. Login works against every remote target.
 
-Edit the file as needed. The most important field is
-`api.rocrate.endpoint`, which must point at a running `arocapi` serving
-RO-Crate API spec 0.4.0 or later.
+Each target is a Vite mode with a committed `.env.<mode>` file. The dev
+server reads the target's live `configuration.json` (`ONI_CONFIG_PATH`),
+applies any `ONI_*` overrides (see
+[Environment overrides](docs/configuration.md#environment-overrides)), and
+serves the site's logo and translations from `ONI_ASSETS_PATH`.
 
-### 3. Start an `arocapi` RO-Crate API
+### Working on a configuration
 
-You will need an `arocapi` instance running somewhere reachable from the
-dev server. A `docker compose` recipe is planned but currently disabled —
-see the FIXME in [`docker/docker-compose.yml`](docker/docker-compose.yml).
-
-### 4. Run the dev server
+`pnpm dev:local` serves a local configuration file and reloads the browser
+when it changes. By default that's a gitignored `configuration.local.json` at
+the repo root:
 
 ```sh
-pnpm dev
+cp configuration.sample.json configuration.local.json
+pnpm dev:local
 ```
 
-Open <http://localhost:5173>.
+To edit a config that lives elsewhere, point `ONI_CONFIG_PATH` at it in a
+gitignored `.env.local-config.local`. For example, for Nabu's config in a
+sibling checkout, against PARADISEC staging:
+
+```sh
+# .env.local-config.local
+ONI_CONFIG_PATH=../nabu/docker/oni.json
+ONI_ASSETS_PATH=../nabu/docker
+ONI_API_ENDPOINT=https://admin-catalog.nabu-stage.paradisec.org.au/api/v1/oni
+ONI_OIDC_ENDPOINT=https://admin-catalog.nabu-stage.paradisec.org.au
+ONI_OIDC_CLIENT_ID=8XJwJIeei7hyeikp5tT-qvhYmFbrGdqGJ0zzS4GqwIQ
+```
+
+Any target can be tweaked the same way with `.env.<mode>.local`, `.env.local`
+(all targets), or `ONI_*` variables in your shell.
 
 ## Project layout
 
 ```
 public/                  Static assets served at the web root
-  configuration.json     Per-developer config (gitignored)
+plugins/                 Dev-server plugin serving the target's config and assets
+configuration.local.json Config for `pnpm dev:local` (gitignored)
 src/
   views/                 Page-level components, one per route
   components/            Reusable components (cards/, widgets/)
@@ -80,9 +97,10 @@ src/
   configuration.ts       Zod schema for /configuration.json
   tools.ts               Formatting helpers (first(), file sizes, durations, getEntityUrl)
 scripts/                 Build-time scripts (vocab fetching)
-docker/                  Production image (nginx + built dist) — see docker/README.md
+docker/                  Production image (nginx + built dist)
 docs/
   configuration.md       Full configuration reference
+  deployment.md          Docker image, environment variables, and deployment
 ```
 
 A few patterns worth knowing before reading the code:
@@ -95,7 +113,8 @@ A few patterns worth knowing before reading the code:
 
 | Command | Purpose |
 | --- | --- |
-| `pnpm dev` | Start the Vite dev server on port 5173 |
+| `pnpm dev` | Start the Vite dev server on port 5173 (PARADISEC staging) |
+| `pnpm dev:<target>` | Start the dev server against `paradisec-stage`, `paradisec`, `ldaca-dev`, or `local` |
 | `pnpm build` | Type-check + production build, run in parallel |
 | `pnpm preview` | Serve the production build locally |
 | `pnpm test:unit` | Vitest unit tests (jsdom) |
@@ -110,7 +129,8 @@ underlying issue.
 
 ## Configuration
 
-The portal is fully configuration-driven via `public/configuration.json`.
+The portal is fully configuration-driven via `/configuration.json`, with
+per-environment values overridable through `ONI_*` environment variables.
 The full field-by-field reference, with examples and validation rules,
 lives in **[docs/configuration.md](docs/configuration.md)**.
 
@@ -129,10 +149,10 @@ are implementing or maintaining a compatible backend.
 
 ## Deployment
 
-A production Docker image is published to Docker Hub
-(`nabu/oni-ui:latest`) and to GHCR (`ghcr.io/nabu/oni-ui:latest`). See
-**[docker/README.md](docker/README.md)** for image tags, the expected
-configuration mount point, nginx customisation, and health-check details.
+A production Docker image is published to GHCR
+(`ghcr.io/crate-works/oni`). See **[docs/deployment.md](docs/deployment.md)** for
+image tags, the configuration mount point, `ONI_*` environment variables,
+nginx customisation, and health-check details.
 
 ## Contributing
 

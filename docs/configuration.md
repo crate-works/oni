@@ -1,6 +1,6 @@
 # Configuration
 
-This document describes every field accepted by `public/configuration.json`.
+This document describes every field accepted by `configuration.json`.
 The schema is validated at runtime by Zod — see
 [`src/configuration.ts`](../src/configuration.ts) for the canonical source of
 truth. A working example lives at [`configuration.sample.json`](../configuration.sample.json)
@@ -38,6 +38,7 @@ at the repo root.
     - [Features (Optional)](#features-optional)
     - [Pagination (Optional)](#pagination-optional)
   - [API Configuration](#api-configuration)
+  - [Environment Overrides](#environment-overrides)
   - [Validation](#validation)
   - [Example Complete Configuration](#example-complete-configuration)
 
@@ -841,6 +842,31 @@ Configure the page size options available across all paginated views (search res
   }
 }
 ```
+
+## Environment Overrides
+
+Per-environment values can be set with environment variables instead of
+being written into `configuration.json`, so one committed config works across
+environments. Each set variable is deep-merged over the file before the app
+loads it; unset or empty variables leave the file untouched, and any
+sections they target are created if missing.
+
+| Variable | Overrides |
+|----------|-----------|
+| `ONI_API_ENDPOINT` | `api.rocrate.endpoint` |
+| `ONI_OIDC_ENDPOINT` | `api.oidc.endpoint` |
+| `ONI_OIDC_CLIENT_ID` | `api.oidc.clientId` |
+| `ONI_SENTRY_DSN` | `ui.sentry.dsn` |
+| `ONI_SENTRY_ENVIRONMENT` | `ui.sentry.environment` |
+| `ONI_GA_MEASUREMENT_ID` | `ui.analytics.gaMeasurementId` |
+
+The mapping lives in [`docker/overrides.json`](../docker/overrides.json).
+
+The Docker image applies them when the container starts (see
+[deployment.md](deployment.md)); the dev server applies them from
+the target's `.env.<target>` and any `.env.local` files. The merged result
+must still pass validation — for example, setting `ONI_SENTRY_ENVIRONMENT`
+without a DSN in either place fails.
 
 ## Validation
 

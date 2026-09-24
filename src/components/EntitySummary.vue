@@ -135,13 +135,6 @@ const hiddenSegmentCount = computed(() => segments.value.length - VISIBLE_SEGMEN
           </ul>
         </el-row>
 
-        <el-row v-if="entity.searchExtra?.score" class="pt-2">
-          <div>
-            <font-awesome-icon icon="fa-solid fa-5x fa-award" />
-            {{ t('entity.relevanceScore') }} {{ entity.searchExtra.score }}
-          </div>
-        </el-row>
-
       </el-col>
 
       <el-col :xs="24" :sm="9" :md="9" :lg="7" :xl="5" :span="4" :offset="0">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Truncate from '@/components/Truncate.vue';
+import TruncateText from '@/components/TruncateText.vue';
 import { joinAll } from '@/lib/tools';
 import type { RoCrate } from '@/services/api';
 
@@ -21,6 +21,6 @@ if (!localLicense) {
       {{ joinAll(localLicense.name) }}
     </a>
 
-    <Truncate v-if="localLicense.description" :text="joinAll(localLicense.description, '\n\n')" :lines="2" />
+    <TruncateText v-if="localLicense.description" :text="joinAll(localLicense.description, '\n\n')" :lines="2" />
   </div>
 </template>

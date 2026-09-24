@@ -3,9 +3,9 @@ import { CloseBold } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import DateFacet from '@/components/DateFacet.vue';
-import Facet from '@/components/Facet.vue';
 import SearchAdvanced from '@/components/SearchAdvanced.vue';
 import SearchBar from '@/components/SearchBar.vue';
+import SearchFacet from '@/components/SearchFacet.vue';
 import type { AdvancedSearchLine, FacetType, SetSearchParamsOptions } from '@/composables/search';
 import { ordering } from '@/composables/search';
 import { ui } from '@/configuration';
@@ -166,7 +166,7 @@ const clean = (value: string) => {
             <DateFacet v-if="facet.type === 'hierarchical'" :buckets="facet.buckets" :facetName="facet.name"
               :ref="facet.name" v-show="facet.active" :initialSelectedFacetValues="filters[facet.name]"
               @is-active="facet.active = true" @updated="updateFilter" />
-            <Facet v-else :buckets="facet.buckets" :facetName="facet.name" :ref="facet.name" v-show="facet.active"
+            <SearchFacet v-else :buckets="facet.buckets" :facetName="facet.name" :ref="facet.name" v-show="facet.active"
               :initialSelectedFacetValues="filters[facet.name]" @is-active="facet.active = true"
               @updated="updateFilter" />
           </ul>

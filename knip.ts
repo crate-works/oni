@@ -2,12 +2,6 @@ import type { KnipConfig } from 'knip';
 
 const config: KnipConfig = {
   entry: ['scripts/*.mts', 'src/assets/main.css', '**/__tests__/*'],
-  ignore: [
-    // https://github.com/webpro-nl/knip/issues/504#issuecomment-2532321511
-    'env.d.ts',
-    'src/reset.d.ts',
-  ],
-  ignoreBinaries: ['scripts/fetch-vocabs.mts'],
   ignoreDependencies: [
     '@tsconfig/node-lts',
     '@total-typescript/ts-reset',

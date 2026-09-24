@@ -2,9 +2,9 @@
 import { inject, onMounted, ref, watch } from 'vue';
 
 import { RouterView } from 'vue-router';
-import FooterView from '@/components/Footer.vue';
+import AppFooter from '@/components/AppFooter.vue';
+import AppNav from '@/components/AppNav.vue';
 import MaintenacePage from '@/components/MaintenacePage.vue';
-import NavView from '@/components/Nav.vue';
 import { ui } from '@/configuration';
 
 import type { Announcement, ApiService, GetTermsResponse } from '@/services/api';
@@ -82,7 +82,7 @@ if (manageTermsAndConditions) {
     <header class="sticky top-0 z-50">
       <el-row :gutter="0" :offset="0" style="" class="flex items-center justify-center">
         <el-col :xs="24" :sm="24" :md="24" :lg="22" :xl="17" :offset="0">
-          <NavView />
+          <AppNav />
         </el-col>
       </el-row>
     </header>
@@ -114,7 +114,7 @@ if (manageTermsAndConditions) {
     </el-row>
 
     <footer>
-      <FooterView />
+      <AppFooter />
     </footer>
   </template>
 

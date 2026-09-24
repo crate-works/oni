@@ -1,10 +1,6 @@
-# Supply chain security
-# https://pnpm.io/supply-chain-security
-minimumReleaseAge: 4320 # 3 days, tighter than v11 default of 1440 (1 day)
-
 allowBuilds:
-  '@sentry/cli': true
-  '@tailwindcss/oxide': true
+  "@sentry/cli": true
+  "@tailwindcss/oxide": true
   esbuild: true
   lefthook: true
   oxc-resolver: true

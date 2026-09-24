@@ -58,6 +58,7 @@ The configuration file has two main sections:
 | `ui.title` | string | Yes | Full title of the portal displayed in headers and page titles |
 | `ui.shortTitle` | string | No | Abbreviated title for compact displays |
 | `ui.logoFilename` | string | No | Filename of the logo image in the public assets directory |
+| `ui.logoLink` | string | No | External URL for the logo. If set, Home becomes a separate menu item; otherwise the logo links to `ui.topNavHome` |
 | `ui.showEllipsis` | boolean | No | Whether to show ellipsis for truncated text |
 | `ui.navHeight` | string | No | CSS height value for the navigation bar (e.g., "80px") |
 
@@ -75,6 +76,7 @@ The configuration file has two main sections:
     "title": "Oni Discovery Portal",
     "shortTitle": "Oni",
     "logoFilename": "logo.jpg",
+    "logoLink": "https://example.org",
     "navHeight": "80px",
     "showEllipsis": true
   }

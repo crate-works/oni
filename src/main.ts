@@ -37,6 +37,8 @@ if (ui.sentry?.dsn) {
     dsn: ui.sentry.dsn,
     sendDefaultPii: true,
     environment: ui.sentry.environment,
+    // Only report errors thrown from our bundle; drops noise from injected scripts
+    allowUrls: [/\/assets\//],
     integrations: [Sentry.browserTracingIntegration({ router })],
     tracesSampleRate: ui.sentry.tracesSampleRate ?? 0.1,
     replaysSessionSampleRate: ui.sentry.replaysSessionSampleRate ?? 0.1,

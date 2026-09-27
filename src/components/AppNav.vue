@@ -16,6 +16,7 @@ const {
   login: { enabled: isLoginEnabled },
   shortTitle = 'Oni',
   logoFilename,
+  logoLink,
   navHeight = '50px',
   topNavHome = '/',
   topNavItems = [],
@@ -34,7 +35,15 @@ const showLanguageSwitcher = computed(() => {
 <template>
   <el-menu id="top_menu" mode="horizontal" :ellipsis="showEllipsis" :default-active="route.name" :router="true"
     :style="{ height: navHeight }">
-    <el-menu-item index="home" :route="topNavHome">
+    <template v-if="logoLink">
+      <a :href="logoLink" class="flex items-center px-5" :style="{ height: navHeight }">
+        <img class="h-full object-cover py-2" :src="logoSrc" :alt="shortTitle || 'Oni'" />
+      </a>
+      <el-menu-item index="home" :route="topNavHome">
+        <span>{{ t('nav.home') }}</span>
+      </el-menu-item>
+    </template>
+    <el-menu-item v-else index="home" :route="topNavHome">
       <router-view :key="topNavHome">
         <el-row :gutter="10" class="flex items-center gap-8" :style="{ 'height': navHeight }">
           <img class="h-full object-cover py-2" :src="logoSrc" :alt="shortTitle || 'Oni'" />

@@ -2,9 +2,9 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { RouterLink } from 'vue-router';
-import MediaTypeIcon from '@/components//widgets/MediaTypeIcon.vue';
 import AccessControlIcon from '@/components/widgets/AccessControlIcon.vue';
 import CommunicationModeIcon from '@/components/widgets/CommunicationModeIcon.vue';
+import MediaTypeIcons from '@/components/widgets/MediaTypeIcons.vue';
 import { ui } from '@/configuration';
 import { getEntityUrl } from '@/lib/tools';
 import { segmentRows } from '@/segments';
@@ -152,9 +152,7 @@ const hiddenSegmentCount = computed(() => segments.value.length - VISIBLE_SEGMEN
           </template>
         </el-row>
         <el-row :span="24" class="flex justify-center">
-          <template v-for="mediaType of entity.mediaType">
-            <MediaTypeIcon :mediaType="mediaType" />
-          </template>
+          <MediaTypeIcons :mediaTypes="entity.mediaType" />
         </el-row>
       </el-col>
     </el-row>

@@ -13,7 +13,7 @@ import MemberOfCard from '@/components/cards/MemberOfCard.vue';
 import RetrieveDataMetadata from '@/components/cards/RetrieveDataMetadata.vue';
 import TakedownCard from '@/components/cards/TakedownCard.vue';
 import MetaField from '@/components/MetaField.vue';
-import MediaTypeIcon from '@/components/widgets/MediaTypeIcon.vue';
+import MediaTypeIcons from '@/components/widgets/MediaTypeIcons.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
 import { useHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
@@ -38,7 +38,7 @@ const gtm = useGtm();
 const { name, meta, populateName, populateMeta, handleMissingEntity } = useEntityView(config);
 
 const files = ref<FileType[]>([]);
-const mediaTypes = computed(() => [...new Set(files.value.map((f) => f.mediaType))]);
+const mediaTypes = computed(() => files.value.map((f) => f.mediaType));
 const isLoading = ref(false);
 const metadata = ref<RoCrate | undefined>();
 const entity = ref<EntityType | undefined>();
@@ -209,7 +209,7 @@ fetchdata();
       <div v-if="files.length" class="mt-4 pt-3 border-0 border-t-2 border-solid border-red-700">
         <h2 class="text-2xl tracking-tight">
           {{ t('object.files') }} {{ files.length }}
-          <MediaTypeIcon v-for="mt of mediaTypes" :mediaType="mt" />
+          <MediaTypeIcons :mediaTypes="mediaTypes" />
         </h2>
       </div>
 

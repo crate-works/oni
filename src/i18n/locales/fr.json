@@ -1,5 +1,7 @@
 {
   "common": {
+    "showMore": "+{n} de plus",
+    "showLess": "Afficher moins",
     "home": "Accueil",
     "mapUnavailable": "La vue cartographique n'est pas disponible",
     "mapNativeTitleWarning": "Cette carte n'est ni conçue ni adaptée à la recherche sur les titres fonciers autochtones (Native Title).",

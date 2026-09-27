@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { RouterLink } from 'vue-router';
+import TruncatedList from '@/components/TruncatedList.vue';
 import AccessControlIcon from '@/components/widgets/AccessControlIcon.vue';
 import CommunicationModeIcon from '@/components/widgets/CommunicationModeIcon.vue';
 import MediaTypeIcons from '@/components/widgets/MediaTypeIcons.vue';
@@ -51,8 +52,7 @@ const hiddenSegmentCount = computed(() => segments.value.length - VISIBLE_SEGMEN
             <p class="font-normal text-gray-700">
               {{ special.label }}:&nbsp;
             </p>
-            <p>{{ (entity[special.field as keyof EntityType] as
-              string[]).join(', ') }}</p>
+            <TruncatedList :items="entity[special.field as keyof EntityType] as string[]" />
           </el-row>
         </template>
 

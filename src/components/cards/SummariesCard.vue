@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import TruncatedList from '@/components/TruncatedList.vue';
 import type { EntityType } from '@/services/api';
 
 const { t } = useI18n();
@@ -23,7 +24,7 @@ const getSearchUrl = (filterName: string, filterValue: string) => {
   <ul v-if="entity">
     <template v-if="entity.language">
       <li><span class="font-semibold">{{ t('metadata.language') }}</span></li>
-      <li v-for="language in entity.language" class="ml-4 pl-2">{{ language }}</li>
+      <TruncatedList :items="entity.language" variant="list" />
     </template>
 
     <template v-if="entity.communicationMode && entity.communicationMode.length">

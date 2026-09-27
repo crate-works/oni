@@ -1,5 +1,7 @@
 {
   "common": {
+    "showMore": "+{n} more",
+    "showLess": "Show less",
     "home": "Home",
     "mapUnavailable": "Map view is not available",
     "mapNativeTitleWarning": "This map is not designed or suitable for Native Title research.",

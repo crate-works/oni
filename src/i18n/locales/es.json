@@ -1,5 +1,7 @@
 {
   "common": {
+    "showMore": "+{n} más",
+    "showLess": "Mostrar menos",
     "home": "Inicio",
     "mapUnavailable": "La vista de mapa no está disponible",
     "mapNativeTitleWarning": "Este mapa no está diseñado ni es adecuado para la investigación de títulos nativos (Native Title).",

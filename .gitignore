@@ -5,6 +5,10 @@ configuration.*
 
 .env
 .env.*
+!.env.paradisec
+!.env.paradisec-stage
+!.env.ldaca-dev
+!.env.local-config
 
 # Generated files
 vocab.json

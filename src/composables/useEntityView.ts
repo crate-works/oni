@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { CollectionConfig, FileConfig, ObjectConfig } from '@/configuration';
 import { first } from '@/lib/tools';
-import type { RoCrate } from '@/services/api';
+import type { EntityType, RoCrate } from '@/services/api';
 
 export function useEntityView(config: CollectionConfig | ObjectConfig | FileConfig) {
   const router = useRouter();
@@ -99,6 +99,11 @@ export function useEntityView(config: CollectionConfig | ObjectConfig | FileConf
     }
   };
 
+  const populateFromRecord = (entity: EntityType) => {
+    name.value = entity.name;
+    meta.value = [];
+  };
+
   const handleMissingEntity = () => {
     router.replace({
       name: 'NotFound',
@@ -113,6 +118,7 @@ export function useEntityView(config: CollectionConfig | ObjectConfig | FileConf
     meta,
     populateName,
     populateMeta,
+    populateFromRecord,
     handleMissingEntity,
   };
 }

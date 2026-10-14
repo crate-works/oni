@@ -15,7 +15,7 @@ import TakedownCard from '@/components/cards/TakedownCard.vue';
 import MetaField from '@/components/MetaField.vue';
 import MediaTypeIcons from '@/components/widgets/MediaTypeIcons.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
-import { useHead } from '@/composables/head';
+import { useHead, useRecordHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { usePagination } from '@/composables/usePagination';
 import { ui } from '@/configuration';
@@ -36,7 +36,7 @@ const route = useRoute();
 const head = injectHead();
 const gtm = useGtm();
 
-const { name, meta, populateName, populateMeta, handleMissingEntity } = useEntityView(config);
+const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(config);
 
 const files = ref<FileType[]>([]);
 const mediaTypes = computed(() => files.value.map((f) => f.mediaType));
@@ -135,8 +135,8 @@ const fetchdata = async () => {
   isLoading.value = true;
 
   try {
-    const { entity: e, metadata: md } = await api.getEntity(id);
-    if (!md) {
+    const result = await api.getEntityWithMetadata(id);
+    if ('error' in result) {
       handleMissingEntity();
 
       return;
@@ -149,9 +149,14 @@ const fetchdata = async () => {
       value: id,
     });
 
-    metadata.value = md;
-    entity.value = e;
-    populate(md);
+    metadata.value = result.metadata;
+    entity.value = result.entity;
+    if (result.metadata) {
+      populate(result.metadata);
+    } else {
+      populateFromRecord(result.entity);
+      useRecordHead(head, result.entity);
+    }
 
     await Promise.all([fetchFiles(id), fetchMembers()]);
   } catch (e) {
@@ -176,7 +181,7 @@ fetchdata();
 </script>
 
 <template>
-  <div v-if="isLoading && (!entity || !metadata)" v-loading="true" class="min-h-[400px] w-full" />
+  <div v-if="isLoading && !entity" v-loading="true" class="min-h-[400px] w-full" />
   <div v-if="entity" class="px-10 pt-10 pb-7 bg-white">
     <el-row :align="'middle'" class="mb-2 text-3xl font-medium">
       <h5>
@@ -187,9 +192,10 @@ fetchdata();
     <hr class="divider divider-gray pt-2" />
   </div>
 
-  <el-row :justify="'center'" v-if="metadata && entity" class="m-5 px-10" v-loading="isLoading">
+  <el-row :justify="'center'" v-if="entity" class="m-5 px-10" v-loading="isLoading">
     <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16">
-      <AccessHelper v-if="entity?.access && metadata.license" :access="entity.access" :license="metadata.license" />
+      <AccessHelper v-if="!metadata" :access="entity.access" level="metadata" />
+      <AccessHelper v-else-if="metadata.license" :access="entity.access" :license="metadata.license" />
 
       <el-row>
         <el-col v-for="m of meta">
@@ -241,7 +247,7 @@ fetchdata();
       </el-row>
 
       <el-row :gutter="20" :align="'middle'" class="justify-center content-center pb-5">
-        <el-col v-if="metadata.license">
+        <el-col v-if="metadata?.license">
           <el-card :body-style="{ padding: '0px' }" class="mx-10 p-5">
             <h5 class="text-2xl font-medium">
               {{ t('object.access') }}
@@ -258,7 +264,7 @@ fetchdata();
         </el-col>
       </el-row>
 
-      <el-row :gutter="20" class="pb-5">
+      <el-row v-if="metadata" :gutter="20" class="pb-5">
         <el-col>
           <el-card :body-style="{ padding: '0px' }" class="mx-10 p-5">
             <h5 class="text-2xl font-medium">{{ t('object.retrieveMetadata') }}</h5>

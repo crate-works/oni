@@ -145,6 +145,8 @@
     "applyForAccess": "Demander l'accès",
     "grantedTo": "accordé à",
     "loggedInCanApply": "Vous êtes connecté et pouvez demander l'autorisation de voir ces fichiers",
+    "loggedInCanApplyMetadata": "Vous êtes connecté et pouvez demander l'autorisation de voir ces métadonnées",
+    "metadataRestricted": "Les métadonnées de cet élément sont restreintes.",
     "noAccessControlUrl": "Aucune URL de contrôle d'accès n'a été configurée, veuillez contacter l'administrateur.",
     "requestAccessOrLogin": "Demandez l'accès ou connectez-vous pour cet élément."
   },

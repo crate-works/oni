@@ -17,7 +17,7 @@ import TakedownCard from '@/components/cards/TakedownCard.vue';
 import DownloadsModal from '@/components/DownloadsModal.vue';
 import MetaField from '@/components/MetaField.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
-import { useHead } from '@/composables/head';
+import { useHead, useRecordHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
 import { joinAll } from '@/lib/tools';
@@ -45,7 +45,7 @@ const isLoading = ref(true);
 const metadata = ref<RoCrate | undefined>();
 const entity = ref<EntityType | undefined>();
 
-const { name, meta, populateName, populateMeta, handleMissingEntity } = useEntityView(config);
+const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(config);
 
 const populate = (md: RoCrate) => {
   populateName(md);
@@ -63,16 +63,10 @@ const fetchData = async () => {
   isLoading.value = true;
 
   try {
-    const { error, entity: rawEntity, metadata: rawMeatadata } = await api.getEntity(id);
-    if (error) {
-      errorDialogText.value = error;
+    const result = await api.getEntityWithMetadata(id);
+    if ('error' in result) {
+      errorDialogText.value = result.error;
       errorDialogVisible.value = true;
-
-      return;
-    }
-
-    if (!rawMeatadata) {
-      handleMissingEntity();
 
       return;
     }
@@ -84,10 +78,15 @@ const fetchData = async () => {
       value: id,
     });
 
-    metadata.value = rawMeatadata;
-    entity.value = rawEntity;
+    metadata.value = result.metadata;
+    entity.value = result.entity;
 
-    populate(rawMeatadata);
+    if (result.metadata) {
+      populate(result.metadata);
+    } else {
+      populateFromRecord(result.entity);
+      useRecordHead(head, result.entity);
+    }
   } catch (e) {
     // 'Not authorised' from the API's 401-retry path triggers a login redirect;
     // don't surface it — the view is about to unload.
@@ -115,8 +114,8 @@ onMounted(fetchData);
 </script>
 
 <template>
-  <div v-if="isLoading && (!entity || !metadata)" v-loading="true" class="min-h-[400px] w-full" />
-  <div v-if="metadata && entity" class="px-10 pt-10 pb-7 bg-white z-10">
+  <div v-if="isLoading && !entity" v-loading="true" class="min-h-[400px] w-full" />
+  <div v-if="entity" class="px-10 pt-10 pb-7 bg-white z-10">
     <el-row :align="'middle'" class="mb-2 text-3xl font-medium">
       <h5>
         <MemberOfLink :entity="entity" />
@@ -126,8 +125,10 @@ onMounted(fetchData);
     <hr class="divider divider-gray pt-2" />
   </div>
 
-  <el-row :justify="'center'" v-if="metadata && entity" class="m-5 pt2 px-10 pb-7">
+  <el-row :justify="'center'" v-if="entity" class="m-5 pt2 px-10 pb-7">
     <el-col :xs="24" :sm="24" :md="14" :lg="16" :xl="16">
+      <AccessHelper v-if="!metadata" :access="entity.access" level="metadata" />
+
       <el-row class="px-5">
         <el-col v-for="m of meta">
           <MetaField :meta="m" />
@@ -156,7 +157,7 @@ onMounted(fetchData);
         </el-col>
       </el-row>
 
-      <el-row v-if="metadata.license" :gutter="20" class="pb-5">
+      <el-row v-if="metadata?.license" :gutter="20" class="pb-5">
         <el-col class="overflow-visible!">
           <el-card class="mx-10 overflow-visible!">
             <h5 class="text-2xl font-medium">
@@ -217,7 +218,7 @@ onMounted(fetchData);
         </el-col>
       </el-row>
 
-      <el-row :gutter="20" class="pb-5">
+      <el-row v-if="metadata" :gutter="20" class="pb-5">
         <el-col>
           <el-card class="mx-10">
             <h5 class="text-2xl font-medium">{{ t('collection.retrieveMetadata') }}

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import AccessHelper from '@/components/AccessHelper.vue';
 import FileResolve from '@/components/FileResolve.vue';
 import MetaField from '@/components/MetaField.vue';
 import { useEntityView } from '@/composables/useEntityView';
@@ -15,7 +16,7 @@ if (!api) {
 
 const route = useRoute();
 
-const { name, meta, populateName, populateMeta, handleMissingEntity } = useEntityView(ui.file);
+const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(ui.file);
 
 type FileRoCrate = RoCrate['hasPart'][number];
 
@@ -28,16 +29,19 @@ const entity = ref<EntityType | undefined>();
 const annotations = ref<AnnotationRef[]>([]);
 const isLoading = ref(true);
 
-const populateData = (md: FileRoCrate, e: EntityType) => {
-  populateName(md as unknown as RoCrate, md['@id']);
-
+const populateData = (md: FileRoCrate | undefined, e: EntityType) => {
   parentTitle.value = e.memberOf?.name || e.memberOf?.id;
 
-  populateMeta(md as unknown as RoCrate);
+  if (md) {
+    populateName(md as unknown as RoCrate, md['@id']);
+    populateMeta(md as unknown as RoCrate);
 
-  // Extract annotation references
-  if (md.hasAnnotation) {
-    annotations.value = md.hasAnnotation;
+    // Extract annotation references
+    if (md.hasAnnotation) {
+      annotations.value = md.hasAnnotation;
+    }
+  } else {
+    populateFromRecord(e);
   }
 
   metadata.value = md;
@@ -52,14 +56,15 @@ const getFileMetadata = async () => {
   }
 
   try {
-    const { entity: fileEntity, metadata: md } = await api.getEntity(id);
-    if (!md) {
+    const result = await api.getEntityWithMetadata(id);
+    if ('error' in result) {
       handleMissingEntity();
 
       return;
     }
 
-    populateData(md as unknown as FileRoCrate, fileEntity);
+    const { entity: fileEntity, metadata: md } = result;
+    populateData(md as unknown as FileRoCrate | undefined, fileEntity);
 
     if (fileEntity.memberOf?.id) {
       try {
@@ -90,8 +95,8 @@ getFileMetadata();
 </script>
 
 <template>
-  <div v-if="isLoading && (!entity || !metadata)" v-loading="true" class="min-h-[400px] w-full" />
-  <el-row :justify="'center'" class="w-full" v-if="entity && metadata">
+  <div v-if="isLoading && !entity" v-loading="true" class="min-h-[400px] w-full" />
+  <el-row :justify="'center'" class="w-full" v-if="entity">
     <el-col :span="24">
       <div class="container mx-auto">
         <el-row>
@@ -117,7 +122,8 @@ getFileMetadata();
         </el-row>
         <el-row>
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="flex justify-center h-screen overflow-auto">
-            <FileResolve :entity="entity" :metadata="metadata" :annotations="annotations" />
+            <FileResolve v-if="metadata" :entity="entity" :metadata="metadata" :annotations="annotations" />
+            <AccessHelper v-else :access="entity.access" level="metadata" />
           </el-col>
         </el-row>
       </div>

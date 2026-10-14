@@ -1,7 +1,7 @@
 import { useHead as useUnhead, type VueHeadClient } from '@unhead/vue';
 import { ui } from '@/configuration';
 import { first } from '@/lib/tools';
-import type { RoCrate } from '@/services/api';
+import type { EntityType, RoCrate } from '@/services/api';
 
 export const useHead = (head: VueHeadClient, md: RoCrate) => {
   const {
@@ -37,3 +37,5 @@ export const useHead = (head: VueHeadClient, md: RoCrate) => {
     { head },
   );
 };
+
+export const useRecordHead = (head: VueHeadClient, entity: EntityType) => useUnhead({ title: entity.name }, { head });

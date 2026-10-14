@@ -248,7 +248,7 @@ export class ApiService {
     return JSON.stringify(crateJson);
   }
 
-  async getRoCrate(id: string) {
+  async getRoCrate(id: string): Promise<{ error: string } | { metadata: RoCrate }> {
     const crateJson = await this.#getEntityMetadata(id);
 
     if ('error' in crateJson) {
@@ -261,20 +261,28 @@ export class ApiService {
   }
 
   async getEntity(id: string) {
-    const [entity, crateJson] = await Promise.all([
-      this.#get<GetEntityResponse>(`/entity/${encodeURIComponent(id)}`),
-      this.getRoCrate(id),
-    ]);
+    const entity = await this.#get<GetEntityResponse>(`/entity/${encodeURIComponent(id)}`);
 
     if ('error' in entity) {
       return { error: entity.error };
     }
 
-    if ('error' in crateJson) {
-      return { error: crateJson.error };
+    return { entity };
+  }
+
+  // metadata is undefined when the Record denies it or the server refuses it.
+  async getEntityWithMetadata(id: string): Promise<{ error: string } | { entity: EntityType; metadata?: RoCrate }> {
+    const result = await this.getEntity(id);
+    if ('error' in result || !result.entity.access.metadata) {
+      return result;
     }
 
-    return { entity, metadata: crateJson.metadata };
+    const crate = await this.getRoCrate(id);
+    if ('error' in crate) {
+      return crate.error === 'Forbidden' ? result : { error: crate.error };
+    }
+
+    return { entity: result.entity, metadata: crate.metadata };
   }
 
   async getFileUrl(id: string, path: string, downloadable = false) {
@@ -414,6 +422,10 @@ export class ApiService {
 
     if (response.status === 401) {
       throw new Error('Not authorised');
+    }
+
+    if (response.status === 403) {
+      return { error: 'Forbidden' };
     }
 
     const data = (await response.json()) as T | ApiErrorBody;

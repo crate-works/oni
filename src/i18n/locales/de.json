@@ -145,6 +145,8 @@
     "applyForAccess": "Zugriff beantragen",
     "grantedTo": "gewährt an",
     "loggedInCanApply": "Sie sind angemeldet und können die Berechtigung zum Anzeigen dieser Dateien beantragen",
+    "loggedInCanApplyMetadata": "Sie sind angemeldet und können die Berechtigung zum Anzeigen dieser Metadaten beantragen",
+    "metadataRestricted": "Die Metadaten dieses Elements sind eingeschränkt.",
     "noAccessControlUrl": "Es wurde keine Zugriffskontroll-URL konfiguriert. Bitte kontaktieren Sie den Administrator.",
     "requestAccessOrLogin": "Zugriff anfordern oder für dieses Element anmelden."
   },

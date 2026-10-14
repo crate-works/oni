@@ -145,6 +145,8 @@
     "applyForAccess": "Solicitar acceso",
     "grantedTo": "otorgado a",
     "loggedInCanApply": "Ha iniciado sesión y puede solicitar permiso para ver estos archivos",
+    "loggedInCanApplyMetadata": "Ha iniciado sesión y puede solicitar permiso para ver estos metadatos",
+    "metadataRestricted": "Los metadatos de este elemento están restringidos.",
     "noAccessControlUrl": "No se ha configurado una URL de control de acceso, póngase en contacto con el administrador.",
     "requestAccessOrLogin": "Solicite acceso o inicie sesión para este elemento."
   },

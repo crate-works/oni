@@ -7,7 +7,7 @@ import AccessHelper from '@/components/AccessHelper.vue';
 import FileResolve from '@/components/FileResolve.vue';
 import MetaField from '@/components/MetaField.vue';
 import { resolveFileVisibilityConfig, resolvePreferredPhotoField } from '@/composables/fileVisibility';
-import { useHead } from '@/composables/head';
+import { useHead, useRecordHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
 import type { ApiService, EntityType, FileType, GetFilesParams, RoCrate } from '@/services/api';
@@ -27,7 +27,7 @@ const { object: config } = ui;
 const fileVisibility = resolveFileVisibilityConfig(ui.presentation?.fileVisibilityField);
 const preferredPhotoField = resolvePreferredPhotoField(ui.presentation?.preferredPhotoField);
 
-const { name, meta, populateName, populateMeta, handleMissingEntity } = useEntityView(config);
+const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(config);
 
 const isLoading = ref(false);
 const entity = ref<EntityType | undefined>();
@@ -132,7 +132,7 @@ const photoFile = computed(() => {
 });
 
 const photoMetadata = computed(() => {
-  if (!photoFile.value || !metadata.value) {
+  if (!photoFile.value) {
     return undefined;
   }
 
@@ -141,7 +141,7 @@ const photoMetadata = computed(() => {
     filename: [photoFile.value.filename],
     encodingFormat: [photoFile.value.mediaType],
     contentSize: [photoFile.value.size],
-    license: metadata.value.license,
+    license: metadata.value?.license,
   };
 });
 
@@ -232,17 +232,22 @@ const fetchData = async () => {
   isLoading.value = true;
 
   try {
-    const { entity: fetchedEntity, metadata: fetchedMetadata } = await api.getEntity(id);
-    if (!fetchedMetadata) {
+    const result = await api.getEntityWithMetadata(id);
+    if ('error' in result) {
       handleMissingEntity();
 
       return;
     }
 
-    entity.value = fetchedEntity;
-    metadata.value = fetchedMetadata;
+    entity.value = result.entity;
+    metadata.value = result.metadata;
     selectedPhotoId.value = undefined;
-    populate(fetchedMetadata);
+    if (result.metadata) {
+      populate(result.metadata);
+    } else {
+      populateFromRecord(result.entity);
+      useRecordHead(head, result.entity);
+    }
 
     await fetchFiles(id);
 
@@ -272,7 +277,7 @@ fetchData();
 </script>
 
 <template>
-  <div v-if="isLoading && (!entity || !metadata)" v-loading="true" class="min-h-[400px] w-full" />
+  <div v-if="isLoading && !entity" v-loading="true" class="min-h-[400px] w-full" />
   <div v-if="entity" class="px-10 pt-10 pb-7 bg-white">
     <el-row :align="'middle'" class="mb-2 text-3xl font-medium">
       <h5>{{ name }}</h5>
@@ -280,7 +285,7 @@ fetchData();
     <hr class="divider divider-gray pt-2" />
   </div>
 
-  <el-row :justify="'center'" v-if="metadata && entity" class="m-5 px-10" v-loading="isLoading">
+  <el-row :justify="'center'" v-if="entity" class="m-5 px-10" v-loading="isLoading">
     <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16">
       <el-row :gutter="24">
         <el-col :xs="24" :sm="24" :md="24" :lg="8" :xl="8" class="pb-6 flex flex-col items-center lg:items-stretch">
@@ -344,7 +349,8 @@ fetchData();
         </el-col>
 
         <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16">
-          <AccessHelper v-if="entity.access && metadata.license" :access="entity.access" :license="metadata.license" />
+          <AccessHelper v-if="!metadata" :access="entity.access" level="metadata" />
+          <AccessHelper v-else-if="metadata.license" :access="entity.access" :license="metadata.license" />
 
           <el-row>
             <el-col v-for="item of meta" :key="item.name">

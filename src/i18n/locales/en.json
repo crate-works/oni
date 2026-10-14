@@ -145,6 +145,8 @@
     "applyForAccess": "Apply for access",
     "grantedTo": "granted to",
     "loggedInCanApply": "You are logged in and can apply for permission to view these files",
+    "loggedInCanApplyMetadata": "You are logged in and can apply for permission to view this metadata",
+    "metadataRestricted": "The metadata for this item is restricted.",
     "noAccessControlUrl": "No access control URL has been configured, please contact the administrator.",
     "requestAccessOrLogin": "Request access or login for this item."
   },

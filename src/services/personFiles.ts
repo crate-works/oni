@@ -58,7 +58,7 @@ const resolveFileVisibilityById = async (
   const entries = await Promise.all(
     files.map(async (file) => {
       try {
-        const result = await api.getEntity(file.id);
+        const result = await api.getEntityWithMetadata(file.id);
         if ('error' in result || !result.metadata) {
           return [file.id, true] as const;
         }

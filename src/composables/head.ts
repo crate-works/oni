@@ -38,4 +38,5 @@ export const useHead = (head: VueHeadClient, md: RoCrate) => {
   );
 };
 
-export const useRecordHead = (head: VueHeadClient, entity: EntityType) => useUnhead({ title: entity.name }, { head });
+export const useRecordHead = (head: VueHeadClient, entity: EntityType) =>
+  useUnhead({ title: entity.name || 'Research Object' }, { head });

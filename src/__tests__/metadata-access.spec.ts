@@ -1,3 +1,4 @@
+import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/configuration', async () => {
@@ -80,6 +81,8 @@ describe.each(views)('$name view', ({ name, view, entityType, crateType }) => {
       expect(wrapper.text()).toContain('Record name');
       expect(wrapper.text()).toContain('The metadata for this item is restricted.');
       expect(wrapper.text()).not.toContain('Crate-only description');
+      expect(wrapper.text()).not.toContain('Download metadata');
+      expect(wrapper.text()).not.toContain('Elements for a Bibliographic Reference');
       expect(requestedPaths(vi.mocked(globalThis.fetch))).not.toContain(`/entity/${id}/metadata`);
     });
 
@@ -134,5 +137,25 @@ describe('page title', () => {
     await mountView(ObjectView, `/object?id=${encodeURIComponent(id)}`);
 
     expect(document.title).toBe('Record name');
+  });
+
+  it('drops crate meta tags from the previous page when navigating to a restricted page', async () => {
+    const grantedId = 'arcp://name,corpus/person/granted';
+    const deniedId = 'arcp://name,corpus/person/denied';
+    globalThis.fetch = fakeApi({
+      records: {
+        [grantedId]: record(grantedId, 'http://schema.org/Person', granted),
+        [deniedId]: record(deniedId, 'http://schema.org/Person', denied),
+      },
+      crates: { [grantedId]: crate(grantedId, 'Person') },
+    });
+    const { router } = await mountView(PersonView, `/person?id=${encodeURIComponent(grantedId)}`);
+    expect(document.head.querySelector('meta[name="DC.description"]')).not.toBeNull();
+
+    await router.push(`/person?id=${encodeURIComponent(deniedId)}`);
+    await flushPromises();
+
+    expect(document.title).toBe('Record name');
+    expect(document.head.querySelector('meta[name="DC.description"]')).toBeNull();
   });
 });

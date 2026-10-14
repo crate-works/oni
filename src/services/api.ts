@@ -240,7 +240,9 @@ export class ApiService {
   }
 
   #getEntityMetadata(id: string) {
-    return this.#get<object | ErrorResponse>(`/entity/${encodeURIComponent(id)}/metadata`);
+    return this.#get<object | ErrorResponse>(`/entity/${encodeURIComponent(id)}/metadata`, undefined, {
+      deniedAsError: true,
+    });
   }
 
   async getRoCrateJSON(id: string) {
@@ -272,7 +274,7 @@ export class ApiService {
   }
 
   // metadata is undefined when the Record denies it or the server refuses it.
-  async getEntityWithMetadata(id: string): Promise<{ error: string } | { entity: EntityType; metadata?: RoCrate }> {
+  async getEntityWithMetadata(id: string): Promise<ErrorResponse | { entity: EntityType; metadata?: RoCrate }> {
     const result = await this.getEntity(id);
     if ('error' in result || !result.entity.access.metadata) {
       return result;
@@ -410,7 +412,11 @@ export class ApiService {
     throw new Error('Unexpected error response');
   }
 
-  async #get<T extends object>(path: string, params?: Record<string, string>): Promise<T | ErrorResponse> {
+  async #get<T extends object>(
+    path: string,
+    params?: Record<string, string>,
+    { deniedAsError = false } = {},
+  ): Promise<T | ErrorResponse> {
     const headers = await this.#getHeaders();
     const queryString = params ? new URLSearchParams(params).toString() : undefined;
 
@@ -425,7 +431,7 @@ export class ApiService {
       throw new Error('Not authorised');
     }
 
-    if (response.status === 403) {
+    if (response.status === 403 && deniedAsError) {
       return { error: 'Forbidden', status: 403 };
     }
 

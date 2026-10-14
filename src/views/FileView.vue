@@ -29,15 +29,16 @@ const entity = ref<EntityType | undefined>();
 const annotations = ref<AnnotationRef[]>([]);
 const isLoading = ref(true);
 
-const populateData = (md: FileRoCrate | undefined, e: EntityType) => {
+const populateData = (md: RoCrate | undefined, e: EntityType) => {
+  const file = md as unknown as FileRoCrate | undefined;
   parentTitle.value = e.memberOf?.name || e.memberOf?.id;
-  populate(e, md as unknown as RoCrate | undefined, md?.['@id']);
+  populate(e, md, file?.['@id']);
 
-  if (md?.hasAnnotation) {
-    annotations.value = md.hasAnnotation;
+  if (file?.hasAnnotation) {
+    annotations.value = file.hasAnnotation;
   }
 
-  metadata.value = md;
+  metadata.value = file;
   entity.value = e;
 };
 
@@ -57,7 +58,7 @@ const getFileMetadata = async () => {
     }
 
     const { entity: fileEntity, metadata: md } = result;
-    populateData(md as unknown as FileRoCrate | undefined, fileEntity);
+    populateData(md, fileEntity);
 
     if (fileEntity.memberOf?.id) {
       try {
@@ -104,21 +105,23 @@ getFileMetadata();
             </h3>
           </el-col>
         </el-row>
-        <el-row>
-          <el-col :xs="24" :sm="15" :md="24" :lg="24" :xl="24">
-            <ul>
-              <li v-for="m of meta">
-                <MetaField :meta="m" />
-              </li>
-            </ul>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="flex justify-center h-screen overflow-auto">
-            <FileResolve v-if="metadata" :entity="entity" :metadata="metadata" :annotations="annotations" />
-            <AccessHelper v-else :access="entity.access" level="metadata" />
-          </el-col>
-        </el-row>
+        <AccessHelper v-if="!metadata" :access="entity.access" level="metadata" />
+        <template v-else>
+          <el-row>
+            <el-col :xs="24" :sm="15" :md="24" :lg="24" :xl="24">
+              <ul>
+                <li v-for="m of meta">
+                  <MetaField :meta="m" />
+                </li>
+              </ul>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="flex justify-center h-screen overflow-auto">
+              <FileResolve :entity="entity" :metadata="metadata" :annotations="annotations" />
+            </el-col>
+          </el-row>
+        </template>
       </div>
     </el-col>
   </el-row>

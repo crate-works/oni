@@ -101,22 +101,20 @@ export function useEntityView(config: CollectionConfig | ObjectConfig | FileConf
     }
   };
 
-  // Without Metadata, only the Record's name is shown.
+  let headEntry: { dispose: () => void } | undefined;
+
   const populate = (entity: EntityType, md?: RoCrate, nameFallback?: string) => {
-    if (!md) {
+    if (md) {
+      populateName(md, nameFallback);
+      populateMeta(md);
+    } else {
       name.value = entity.name;
       meta.value = [];
-      if (head) {
-        useRecordHead(head, entity);
-      }
-
-      return;
     }
 
-    populateName(md, nameFallback);
-    populateMeta(md);
     if (head) {
-      useHead(head, md);
+      headEntry?.dispose();
+      headEntry = md ? useHead(head, md) : useRecordHead(head, entity);
     }
   };
 

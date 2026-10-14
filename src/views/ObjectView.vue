@@ -15,7 +15,6 @@ import TakedownCard from '@/components/cards/TakedownCard.vue';
 import MetaField from '@/components/MetaField.vue';
 import MediaTypeIcons from '@/components/widgets/MediaTypeIcons.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
-import { useHead, useRecordHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { usePagination } from '@/composables/usePagination';
 import { ui } from '@/configuration';
@@ -36,7 +35,7 @@ const route = useRoute();
 const head = injectHead();
 const gtm = useGtm();
 
-const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(config);
+const { name, meta, populate, handleMissingEntity } = useEntityView(config, head);
 
 const files = ref<FileType[]>([]);
 const mediaTypes = computed(() => files.value.map((f) => f.mediaType));
@@ -96,12 +95,6 @@ const fetchFiles = async (id: string) => {
   );
 };
 
-const populate = (md: RoCrate) => {
-  populateName(md);
-  populateMeta(md);
-  useHead(head, md);
-};
-
 const fetchMembers = async () => {
   if (!entity.value?.memberOf) {
     return;
@@ -151,12 +144,7 @@ const fetchdata = async () => {
 
     metadata.value = result.metadata;
     entity.value = result.entity;
-    if (result.metadata) {
-      populate(result.metadata);
-    } else {
-      populateFromRecord(result.entity);
-      useRecordHead(head, result.entity);
-    }
+    populate(result.entity, result.metadata);
 
     await Promise.all([fetchFiles(id), fetchMembers()]);
   } catch (e) {

@@ -7,7 +7,6 @@ import AccessHelper from '@/components/AccessHelper.vue';
 import FileResolve from '@/components/FileResolve.vue';
 import MetaField from '@/components/MetaField.vue';
 import { resolveFileVisibilityConfig, resolvePreferredPhotoField } from '@/composables/fileVisibility';
-import { useHead, useRecordHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
 import type { ApiService, EntityType, FileType, GetFilesParams, RoCrate } from '@/services/api';
@@ -27,7 +26,7 @@ const { object: config } = ui;
 const fileVisibility = resolveFileVisibilityConfig(ui.presentation?.fileVisibilityField);
 const preferredPhotoField = resolvePreferredPhotoField(ui.presentation?.preferredPhotoField);
 
-const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(config);
+const { name, meta, populate, handleMissingEntity } = useEntityView(config, head);
 
 const isLoading = ref(false);
 const entity = ref<EntityType | undefined>();
@@ -215,12 +214,6 @@ const fetchFiles = async (id: string) => {
   isPhotoVisibilityReady.value = true;
 };
 
-const populate = (md: RoCrate) => {
-  populateName(md);
-  populateMeta(md);
-  useHead(head, md);
-};
-
 const fetchData = async () => {
   const id = route.query.id?.toString();
   if (!id) {
@@ -242,12 +235,7 @@ const fetchData = async () => {
     entity.value = result.entity;
     metadata.value = result.metadata;
     selectedPhotoId.value = undefined;
-    if (result.metadata) {
-      populate(result.metadata);
-    } else {
-      populateFromRecord(result.entity);
-      useRecordHead(head, result.entity);
-    }
+    populate(result.entity, result.metadata);
 
     await fetchFiles(id);
 

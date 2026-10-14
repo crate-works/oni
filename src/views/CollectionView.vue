@@ -17,7 +17,6 @@ import TakedownCard from '@/components/cards/TakedownCard.vue';
 import DownloadsModal from '@/components/DownloadsModal.vue';
 import MetaField from '@/components/MetaField.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
-import { useHead, useRecordHead } from '@/composables/head';
 import { useEntityView } from '@/composables/useEntityView';
 import { ui } from '@/configuration';
 import { joinAll } from '@/lib/tools';
@@ -45,13 +44,7 @@ const isLoading = ref(true);
 const metadata = ref<RoCrate | undefined>();
 const entity = ref<EntityType | undefined>();
 
-const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(config);
-
-const populate = (md: RoCrate) => {
-  populateName(md);
-  populateMeta(md);
-  useHead(head, md);
-};
+const { name, meta, populate, handleMissingEntity } = useEntityView(config, head);
 
 const fetchData = async () => {
   if (!id) {
@@ -81,12 +74,7 @@ const fetchData = async () => {
     metadata.value = result.metadata;
     entity.value = result.entity;
 
-    if (result.metadata) {
-      populate(result.metadata);
-    } else {
-      populateFromRecord(result.entity);
-      useRecordHead(head, result.entity);
-    }
+    populate(result.entity, result.metadata);
   } catch (e) {
     // 'Not authorised' from the API's 401-retry path triggers a login redirect;
     // don't surface it — the view is about to unload.

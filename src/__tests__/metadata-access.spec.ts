@@ -132,7 +132,6 @@ describe('page title', () => {
     const id = 'arcp://name,corpus/object';
     globalThis.fetch = fakeApi({ records: { [id]: record(id, 'http://pcdm.org/models#Object', denied) } });
     await mountView(ObjectView, `/object?id=${encodeURIComponent(id)}`);
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(document.title).toBe('Record name');
   });

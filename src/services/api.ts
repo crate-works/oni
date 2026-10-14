@@ -88,6 +88,7 @@ type ApiErrorBody = {
 
 type ErrorResponse = {
   error: string;
+  status?: number;
 };
 
 export type GetEntitiesResponse = {
@@ -248,11 +249,11 @@ export class ApiService {
     return JSON.stringify(crateJson);
   }
 
-  async getRoCrate(id: string): Promise<{ error: string } | { metadata: RoCrate }> {
+  async getRoCrate(id: string): Promise<ErrorResponse | { metadata: RoCrate }> {
     const crateJson = await this.#getEntityMetadata(id);
 
     if ('error' in crateJson) {
-      return { error: crateJson.error };
+      return crateJson as ErrorResponse;
     }
 
     const crate = new ROCrate(crateJson, { array: true, link: true });
@@ -279,7 +280,7 @@ export class ApiService {
 
     const crate = await this.getRoCrate(id);
     if ('error' in crate) {
-      return crate.error === 'Forbidden' ? result : { error: crate.error };
+      return crate.status === 403 ? result : { error: crate.error };
     }
 
     return { entity: result.entity, metadata: crate.metadata };
@@ -425,7 +426,7 @@ export class ApiService {
     }
 
     if (response.status === 403) {
-      return { error: 'Forbidden' };
+      return { error: 'Forbidden', status: 403 };
     }
 
     const data = (await response.json()) as T | ApiErrorBody;

@@ -1,10 +1,12 @@
+import type { VueHeadClient } from '@unhead/vue';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useHead, useRecordHead } from '@/composables/head';
 import type { CollectionConfig, FileConfig, ObjectConfig } from '@/configuration';
 import { first } from '@/lib/tools';
 import type { EntityType, RoCrate } from '@/services/api';
 
-export function useEntityView(config: CollectionConfig | ObjectConfig | FileConfig) {
+export function useEntityView(config: CollectionConfig | ObjectConfig | FileConfig, head?: VueHeadClient) {
   const router = useRouter();
   const route = useRoute();
 
@@ -99,9 +101,23 @@ export function useEntityView(config: CollectionConfig | ObjectConfig | FileConf
     }
   };
 
-  const populateFromRecord = (entity: EntityType) => {
-    name.value = entity.name;
-    meta.value = [];
+  // Without Metadata, only the Record's name is shown.
+  const populate = (entity: EntityType, md?: RoCrate, nameFallback?: string) => {
+    if (!md) {
+      name.value = entity.name;
+      meta.value = [];
+      if (head) {
+        useRecordHead(head, entity);
+      }
+
+      return;
+    }
+
+    populateName(md, nameFallback);
+    populateMeta(md);
+    if (head) {
+      useHead(head, md);
+    }
   };
 
   const handleMissingEntity = () => {
@@ -116,9 +132,7 @@ export function useEntityView(config: CollectionConfig | ObjectConfig | FileConf
   return {
     name,
     meta,
-    populateName,
-    populateMeta,
-    populateFromRecord,
+    populate,
     handleMissingEntity,
   };
 }

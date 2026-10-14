@@ -16,7 +16,7 @@ if (!api) {
 
 const route = useRoute();
 
-const { name, meta, populateName, populateMeta, populateFromRecord, handleMissingEntity } = useEntityView(ui.file);
+const { name, meta, populate, handleMissingEntity } = useEntityView(ui.file);
 
 type FileRoCrate = RoCrate['hasPart'][number];
 
@@ -31,17 +31,10 @@ const isLoading = ref(true);
 
 const populateData = (md: FileRoCrate | undefined, e: EntityType) => {
   parentTitle.value = e.memberOf?.name || e.memberOf?.id;
+  populate(e, md as unknown as RoCrate | undefined, md?.['@id']);
 
-  if (md) {
-    populateName(md as unknown as RoCrate, md['@id']);
-    populateMeta(md as unknown as RoCrate);
-
-    // Extract annotation references
-    if (md.hasAnnotation) {
-      annotations.value = md.hasAnnotation;
-    }
-  } else {
-    populateFromRecord(e);
+  if (md?.hasAnnotation) {
+    annotations.value = md.hasAnnotation;
   }
 
   metadata.value = md;

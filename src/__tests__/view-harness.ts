@@ -74,11 +74,8 @@ export const mountView = async (view: Component, url: string, { loggedIn = false
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
+      { path: '/:view', component: view },
       { path: '/:pathMatch(.*)*', name: 'NotFound', component: { template: '<div />' } },
-      { path: '/object', component: view },
-      { path: '/collection', component: view },
-      { path: '/person', component: view },
-      { path: '/file', component: view },
     ],
   });
   await router.push(url);

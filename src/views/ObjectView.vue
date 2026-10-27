@@ -5,13 +5,13 @@ import { computed, inject, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import AccessHelper from '@/components/AccessHelper.vue';
-import CollectionItem from '@/components/CollectionItem.vue';
 import CitationCard from '@/components/cards/CitationCard.vue';
 import LicenseCard from '@/components/cards/LicenseCard.vue';
 import ManagementCard from '@/components/cards/ManagementCard.vue';
 import MemberOfCard from '@/components/cards/MemberOfCard.vue';
 import RetrieveDataMetadata from '@/components/cards/RetrieveDataMetadata.vue';
 import TakedownCard from '@/components/cards/TakedownCard.vue';
+import MemberTable from '@/components/MemberTable.vue';
 import MetaField from '@/components/MetaField.vue';
 import MediaTypeIcons from '@/components/widgets/MediaTypeIcons.vue';
 import MemberOfLink from '@/components/widgets/MemberOfLink.vue';
@@ -299,15 +299,7 @@ fetchdata();
               </router-link>
               <span v-else />
             </div>
-            <ul class="mt-4 space">
-              <li v-for="d of membersFiltered" :key="d.id">
-                <p v-if="d.id === route.query.id" class="font-bold">
-                  {{ d.identifiers?.shortIdentifier ? `${d.identifiers.shortIdentifier} - ${d.name || d.id}` : d.name ||
-                    d.id }}
-                </p>
-                <CollectionItem v-else :field="d" routePath="object" />
-              </li>
-            </ul>
+            <MemberTable class="mt-4" :items="membersFiltered" :currentId="route.query.id?.toString()" />
             <el-pagination v-if="totalMembers > pageSize" class="mt-4" background
               layout="sizes, prev, pager, next" :total="totalMembers" :page-sizes="ui.pagination.pageSizes"
               v-model:page-size="pageSize" v-model:current-page="currentPage" />

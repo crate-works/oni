@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, ref } from 'vue';
-import CollectionItem from '@/components/CollectionItem.vue';
+import MemberTable from '@/components/MemberTable.vue';
 import { defaultPageSize, ui } from '@/configuration';
 import type { ApiService, EntityType, GetEntitiesParams } from '@/services/api';
 
@@ -9,11 +9,10 @@ if (!api) {
   throw new Error('API instance not provided');
 }
 
-const { title, id, entityType, routePath, sort } = defineProps<{
+const { title, id, entityType, sort } = defineProps<{
   title: string;
   id: string;
   entityType: string;
-  routePath: string;
   sort: string;
 }>();
 
@@ -81,11 +80,7 @@ onMounted(setMembers);
             @current-change="updatePages($event)" @size-change="handlePageSizeChange" />
         </div>
         <div v-loading="isLoading">
-          <ul class="member-list">
-            <li v-for="item of items" :key="item.id" class="px-4 py-2 odd:bg-gray-50">
-              <CollectionItem :field="item" :routePath="routePath" />
-            </li>
-          </ul>
+          <MemberTable :items="items" />
         </div>
         <div class="py-2 w-full">
           <el-pagination class="items-center w-full" background layout="sizes, prev, pager, next" :total="total"
@@ -96,11 +91,3 @@ onMounted(setMembers);
     </el-row>
   </template>
 </template>
-
-<style scoped>
-/* Match the member list font size to the page's body text (Element Plus
-   defaults el-link to 14px, smaller than the surrounding metadata). */
-.member-list :deep(.el-link) {
-  font-size: 1rem;
-}
-</style>

@@ -292,15 +292,16 @@ const searchGeoHash = async ({ geohash, pageSize }: { geohash: string; pageSize:
 
 const getInnerHTMLTooltip = (entity: EntityType) => {
   const name = entity.name || entity.id;
-  const title = entity.identifiers?.shortIdentifier ? `${entity.identifiers.shortIdentifier} - ${name}` : name;
+  const shortIdentifier = entity.identifiers?.shortIdentifier;
   const type = entity.entityType;
   const href = getEntityUrl(entity);
   const clickableHref = getBasePathUrl(href);
 
   let innerHTML = `
     <div>
+      ${shortIdentifier ? `<p class="text-sm text-gray-500">${shortIdentifier}</p>` : ''}
       <h3 class="mb-2 mt-1 text-2xl">
-        <a href="${clickableHref}" data-route="${href}">${title}</a>
+        <a href="${clickableHref}" data-route="${href}">${name}</a>
       </h3>
       <h4>Type: ${type}</h4>
   `;

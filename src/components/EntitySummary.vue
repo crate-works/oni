@@ -31,11 +31,14 @@ const hiddenSegmentCount = computed(() => segments.value.length - VISIBLE_SEGMEN
   <div><!-- Wrapping an empty div because of multiple roots with v-for-->
     <el-row>
       <el-col :xs="24" :sm="15" :md="15" :lg="17" :xl="19" :span="20">
+        <el-row v-if="entity.identifiers?.shortIdentifier" :align="'middle'">
+          <p class="text-sm text-gray-500">{{ entity.identifiers.shortIdentifier }}</p>
+        </el-row>
         <el-row :align="'middle'">
           <h5 class="text-2xl font-medium">
             <router-link :to="getEntityUrl(entity)"
               class="text-blue-600 hover:text-blue-800 visited:text-purple-600 wrap-break-word">
-              {{ entity.identifiers?.shortIdentifier ? `${entity.identifiers.shortIdentifier} - ${entity.name || entity.id}` : entity.name || entity.id }}
+              {{ entity.name || entity.id }}
             </router-link>
           </h5>
         </el-row>

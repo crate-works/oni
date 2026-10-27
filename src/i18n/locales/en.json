@@ -25,6 +25,8 @@
     "yes": "Yes",
     "no": "No",
     "access": "Access",
+    "identifier": "Identifier",
+    "title": "Title",
     "actions": "Actions",
     "clear": "Clear",
     "filter": "Filter",

@@ -25,6 +25,8 @@
     "yes": "Ja",
     "no": "Nein",
     "access": "Zugriff",
+    "identifier": "Kennung",
+    "title": "Titel",
     "actions": "Aktionen",
     "clear": "Löschen",
     "filter": "Filter",

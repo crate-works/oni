@@ -79,6 +79,18 @@ export const parseContentSize = (value: string | number) => {
   return number * (unitMultipliers[unit as keyof typeof unitMultipliers] || 1);
 };
 
+export const isAbsoluteUrl = (value: unknown) => {
+  if (typeof value !== 'string' || /\s/.test(value)) {
+    return false;
+  }
+
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+};
+
 export const getBasePathUrl = (path: string) => {
   const base = import.meta.env.BASE_URL || '/';
   const normalizedBase = base === '/' ? '' : base.replace(/\/+$/, '');

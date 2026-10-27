@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { groupMediaTypesByIcon, parseContentSize } from '@/lib/tools';
+import { groupMediaTypesByIcon, isAbsoluteUrl, parseContentSize } from '@/lib/tools';
 
 describe('parseContentSize', () => {
   it('should return the number itself if it is a valid number and in bytes', () => {
@@ -80,5 +80,32 @@ describe('groupMediaTypesByIcon', () => {
     expect(groupMediaTypesByIcon(['audio/mpeg', 'audio/mpeg'])).toEqual([
       { icon: 'file-audio', mediaTypes: ['audio/mpeg'] },
     ]);
+  });
+});
+
+describe('isAbsoluteUrl', () => {
+  it('accepts http and https URLs', () => {
+    expect(isAbsoluteUrl('http://example.org')).toBe(true);
+    expect(isAbsoluteUrl('https://example.org/path?q=1#frag')).toBe(true);
+  });
+
+  it('rejects other schemes', () => {
+    expect(isAbsoluteUrl('ftp://example.org')).toBe(false);
+    expect(isAbsoluteUrl('javascript:alert(1)')).toBe(false);
+    expect(isAbsoluteUrl('mailto:someone@example.org')).toBe(false);
+  });
+
+  it('rejects relative, malformed and whitespace-containing values', () => {
+    expect(isAbsoluteUrl('www.example.org')).toBe(false);
+    expect(isAbsoluteUrl('#local-id')).toBe(false);
+    expect(isAbsoluteUrl('httpfoo')).toBe(false);
+    expect(isAbsoluteUrl('https://example.org/a b')).toBe(false);
+    expect(isAbsoluteUrl(' https://example.org')).toBe(false);
+  });
+
+  it('rejects non-strings', () => {
+    expect(isAbsoluteUrl(undefined)).toBe(false);
+    expect(isAbsoluteUrl(42)).toBe(false);
+    expect(isAbsoluteUrl({ '@id': 'https://example.org' })).toBe(false);
   });
 });

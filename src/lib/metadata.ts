@@ -1,7 +1,7 @@
 import { ROCrate } from 'ro-crate';
 
 import { ui } from '@/configuration';
-import { first } from '@/lib/tools';
+import { first, isAbsoluteUrl } from '@/lib/tools';
 
 type MetadataMappingConfig = {
   mappingFile?: string;
@@ -27,15 +27,6 @@ const getFirstStringValue = (value: unknown): string | null => {
   }
 
   return firstValue.trim();
-};
-
-const isAbsoluteUrl = (value: string) => {
-  try {
-    const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol);
-  } catch {
-    return false;
-  }
 };
 
 const resolveMetadataMappingUrl = (mappingFile: string) => {

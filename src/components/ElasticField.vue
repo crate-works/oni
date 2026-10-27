@@ -6,7 +6,7 @@ import MetaField from '@/components/MetaField.vue';
 import LeafletMap from '@/components/widgets/LeafletMap.vue';
 
 import { ui } from '@/configuration';
-import { first, formatDuration, formatFileSize, joinAll, shortenText } from '@/lib/tools';
+import { first, formatDuration, formatFileSize, isAbsoluteUrl, joinAll, shortenText } from '@/lib/tools';
 
 const { t } = useI18n();
 
@@ -18,11 +18,7 @@ const props = defineProps<{
 
 const { expand = [], byteFields = [], durationFields = [] } = ui.main;
 
-const testURL = (url: unknown) => {
-  if (typeof url === 'string' && /^https?:\/\/\S+$/.test(url) && URL.canParse(url)) {
-    return url;
-  }
-};
+const asHttpUrl = (value: unknown) => (typeof value === 'string' && isAbsoluteUrl(value) ? value : undefined);
 
 const hasType = (item: object, typeName: string) =>
   '@type' in item && Array.isArray(item['@type']) && item['@type'].includes(typeName);
@@ -53,7 +49,7 @@ const derived = computed(() => {
     name = formatDuration(field);
   } else if (['string', 'number', 'boolean'].includes(typeof field)) {
     name = String(field);
-    url = testURL(field);
+    url = asHttpUrl(field);
   } else if (isIdentifier(field)) {
     identifier = first(field.name);
     name = first(field.value);
@@ -62,11 +58,11 @@ const derived = computed(() => {
     if ('code' in field) {
       name += ` (${joinAll(field.code, ', ')})`;
     }
-    url = testURL(field['@id']);
+    url = asHttpUrl(field['@id']);
   } else if (Array.isArray(field) && typeof field[0] === 'string') {
     name = field.join(' | ');
   } else {
-    url = testURL(field['@id']);
+    url = asHttpUrl(field['@id']);
     name = joinAll(field.name) || field['@id'];
     description = joinAll(field.description, '\n\n');
 

@@ -26,7 +26,7 @@ OpenAPI spec for the standard parts of the API:
 
 The upstream
 [Extensions page](https://language-research-technology.github.io/ro-crate-api/docs/getting-started/extensions)
-is a meta-explanation of *how* an implementation may add fields to entity
+is a meta-explanation of _how_ an implementation may add fields to entity
 responses, and uses Oni UI as the worked example. The fields it lists are
 this project's extensions — they are documented in full in
 [Response shape additions](#response-shape-additions) below.
@@ -53,13 +53,13 @@ this project's extensions — they are documented in full in
 Which extensions a backend must implement depends on the frontend's
 `configuration.json`. Use this table to scope the work.
 
-| If `configuration.json` has…                                          | You must implement                                                              |
-|-----------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| `ui.features.hasZipDownload: true`                                    | [`HEAD /zip/{id}`](#head-zipid)                                                 |
-| `ui.features.hasAnnouncements: true`                                  | [`GET /announcements`](#get-announcements)                                      |
+| If `configuration.json` has…                                               | You must implement                                                                      |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `ui.features.hasZipDownload: true`                                         | [`HEAD /zip/{id}`](#head-zipid)                                                         |
+| `ui.features.hasAnnouncements: true`                                       | [`GET /announcements`](#get-announcements)                                              |
 | `ui.login.enabled: true` **and** `ui.login.manageTermsAndConditions: true` | [`GET /user/terms`](#get-userterms), [`POST /user/terms/accept`](#post-usertermsaccept) |
-| `api.rocrate.clientId` set                                            | OIDC discovery on `api.rocrate.endpoint` — covered upstream                     |
-| *always*                                                              | The [response shape additions](#response-shape-additions) |
+| `api.rocrate.clientId` set                                                 | OIDC discovery on `api.rocrate.endpoint` — covered upstream                             |
+| _always_                                                                   | The [response shape additions](#response-shape-additions)                               |
 
 ## Endpoint reference
 
@@ -75,19 +75,19 @@ via `ApiService.getZipMeta()`
 
 **Request**
 
-| Item              | Value                                              |
-|-------------------|----------------------------------------------------|
-| Method            | `HEAD`                                             |
-| Path              | `/zip/{id}` (`{id}` is URL-encoded)                |
-| `Authorization`   | `Bearer <token>` if the user is signed in (optional) |
+| Item            | Value                                                |
+| --------------- | ---------------------------------------------------- |
+| Method          | `HEAD`                                               |
+| Path            | `/zip/{id}` (`{id}` is URL-encoded)                  |
+| `Authorization` | `Bearer <token>` if the user is signed in (optional) |
 
 **Responses**
 
-| Status | Required headers / body                                                                                  | Mapped client status |
-|--------|----------------------------------------------------------------------------------------------------------|----------------------|
+| Status | Required headers / body                                                                                                                                                                 | Mapped client status |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | `200`  | `Content-Length-Estimate: <bytes>` (integer, estimated unzipped size); `Archive-File-Count: <count>` (integer); the response `url` (after any redirects) is treated as the download URL | `ok`                 |
-| `403`  | empty                                                                                                    | `noAccess`           |
-| `404`  | empty                                                                                                    | `notFound`           |
+| `403`  | empty                                                                                                                                                                                   | `noAccess`           |
+| `404`  | empty                                                                                                                                                                                   | `notFound`           |
 
 **Example**
 
@@ -115,21 +115,21 @@ via `ApiService.getTerms()`
 
 **Request**
 
-| Item              | Value                                            |
-|-------------------|--------------------------------------------------|
-| Method            | `GET`                                            |
-| Path              | `/user/terms`                                    |
-| `Authorization`   | `Bearer <token>` — **required**                  |
+| Item            | Value                           |
+| --------------- | ------------------------------- |
+| Method          | `GET`                           |
+| Path            | `/user/terms`                   |
+| `Authorization` | `Bearer <token>` — **required** |
 
 **Response** (`200 OK`)
 
-| Field          | Type      | Description                                            |
-|----------------|-----------|--------------------------------------------------------|
-| `id`           | integer   | Stable identifier for this terms revision; echoed back to [`/user/terms/accept`](#post-usertermsaccept) |
-| `body`         | string    | HTML or plain-text body shown to the user              |
-| `url`          | string    | Canonical URL of the terms page                        |
-| `description`  | string    | Short summary shown alongside the body                 |
-| `agreement`    | boolean   | `true` if the user has already accepted this revision  |
+| Field         | Type    | Description                                                                                             |
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| `id`          | integer | Stable identifier for this terms revision; echoed back to [`/user/terms/accept`](#post-usertermsaccept) |
+| `body`        | string  | HTML or plain-text body shown to the user                                                               |
+| `url`         | string  | Canonical URL of the terms page                                                                         |
+| `description` | string  | Short summary shown alongside the body                                                                  |
+| `agreement`   | boolean | `true` if the user has already accepted this revision                                                   |
 
 **Example**
 
@@ -160,18 +160,18 @@ via `ApiService.acceptTerms()`
 
 **Request**
 
-| Item              | Value                                                  |
-|-------------------|--------------------------------------------------------|
-| Method            | `POST`                                                  |
-| Path              | `/user/terms/accept`                                   |
-| Body              | `{ id: "<terms id>" }` — the `id` returned by `/user/terms`   |
-| `Authorization`   | `Bearer <token>` — **required**                        |
+| Item            | Value                                                       |
+| --------------- | ----------------------------------------------------------- |
+| Method          | `POST`                                                      |
+| Path            | `/user/terms/accept`                                        |
+| Body            | `{ id: "<terms id>" }` — the `id` returned by `/user/terms` |
+| `Authorization` | `Bearer <token>` — **required**                             |
 
 **Response** (`200 OK`)
 
-| Field      | Type    | Description                            |
-|------------|---------|----------------------------------------|
-| `accept`   | boolean | `true` if the acceptance was recorded  |
+| Field    | Type    | Description                           |
+| -------- | ------- | ------------------------------------- |
+| `accept` | boolean | `true` if the acceptance was recorded |
 
 **Example**
 
@@ -202,19 +202,19 @@ flag is off.
 
 **Request**
 
-| Item              | Value                                              |
-|-------------------|----------------------------------------------------|
-| Method            | `GET`                                              |
-| Path              | `/announcements`                                   |
-| `Authorization`   | `Bearer <token>` if the user is signed in (optional) |
+| Item            | Value                                                |
+| --------------- | ---------------------------------------------------- |
+| Method          | `GET`                                                |
+| Path            | `/announcements`                                     |
+| `Authorization` | `Bearer <token>` if the user is signed in (optional) |
 
 **Response** (`200 OK`)
 
-| Field                    | Type                | Description                                                             |
-|--------------------------|---------------------|-------------------------------------------------------------------------|
-| `announcements`          | `Announcement[]`    | Active announcements. May be empty. The order in which they're returned is the order in which they're rendered. |
-| `announcements[].id`     | integer             | Stable identifier — used as the Vue `:key` so banners don't re-render unnecessarily |
-| `announcements[].message`| string              | Plain-text message body. Rendered as a text node — **HTML is not interpreted** |
+| Field                     | Type             | Description                                                                                                     |
+| ------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `announcements`           | `Announcement[]` | Active announcements. May be empty. The order in which they're returned is the order in which they're rendered. |
+| `announcements[].id`      | integer          | Stable identifier — used as the Vue `:key` so banners don't re-render unnecessarily                             |
+| `announcements[].message` | string           | Plain-text message body. Rendered as a text node — **HTML is not interpreted**                                  |
 
 The endpoint always returns `200` with `{ "announcements": [] }` when no
 announcement is active — there is no `204` special case. If the backend
@@ -248,48 +248,48 @@ omitted. The TypeScript types live in
 
 ### `counts` — on every entity
 
-| Field                    | Type    | Description                                              |
-|--------------------------|---------|----------------------------------------------------------|
-| `counts.collections`     | integer | Number of collections under this entity                  |
-| `counts.objects`         | integer | Number of objects under this entity                      |
-| `counts.subCollections`  | integer | Number of sub-collections directly under this entity     |
-| `counts.files`           | integer | Number of files under this entity                        |
+| Field                   | Type    | Description                                          |
+| ----------------------- | ------- | ---------------------------------------------------- |
+| `counts.collections`    | integer | Number of collections under this entity              |
+| `counts.objects`        | integer | Number of objects under this entity                  |
+| `counts.subCollections` | integer | Number of sub-collections directly under this entity |
+| `counts.files`          | integer | Number of files under this entity                    |
 
 ### `language` — on every entity
 
-| Field      | Type     | Description                                                          |
-|------------|----------|----------------------------------------------------------------------|
+| Field      | Type     | Description                                                                    |
+| ---------- | -------- | ------------------------------------------------------------------------------ |
 | `language` | string[] | Languages represented by this entity (e.g. ISO codes or labels). May be empty. |
 
 ### `communicationMode` — on every entity
 
-| Field               | Type                 | Description                                  |
-|---------------------|----------------------|----------------------------------------------|
-| `communicationMode` | `"Song" \| "Spoken"` | Communication mode of the entity's content   |
+| Field               | Type                 | Description                                |
+| ------------------- | -------------------- | ------------------------------------------ |
+| `communicationMode` | `"Song" \| "Spoken"` | Communication mode of the entity's content |
 
 ### `mediaType` — on every entity
 
-| Field       | Type     | Description                                                              |
-|-------------|----------|--------------------------------------------------------------------------|
+| Field       | Type     | Description                                                                 |
+| ----------- | -------- | --------------------------------------------------------------------------- |
 | `mediaType` | string[] | MIME types of content under this entity (e.g. `"audio/wav"`). May be empty. |
 
 ### `accessControl` — on every entity
 
-| Field           | Type                          | Description                                                 |
-|-----------------|-------------------------------|-------------------------------------------------------------|
-| `accessControl` | `"Public" \| "Restricted"`    | Whether the entity's content is openly accessible           |
+| Field           | Type                       | Description                                       |
+| --------------- | -------------------------- | ------------------------------------------------- |
+| `accessControl` | `"Public" \| "Restricted"` | Whether the entity's content is openly accessible |
 
 ### `identifiers` — optional, on every entity
 
 | Field                              | Type   | Description                                              |
-|------------------------------------|--------|----------------------------------------------------------|
+| ---------------------------------- | ------ | -------------------------------------------------------- |
 | `identifiers.collectionIdentifier` | string | Collection-level identifier (the parent collection's ID) |
 | `identifiers.itemIdentifier`       | string | The item's identifier within its collection              |
 | `identifiers.shortIdentifier`      | string | Short, human-readable identifier used in the UI          |
 
 ### `searchExtra` — optional, on entities returned from `POST /search` only
 
-| Field                  | Type                          | Description                                                                 |
-|------------------------|-------------------------------|-----------------------------------------------------------------------------|
-| `searchExtra.score`    | number                        | Relevance score for the search hit                                          |
-| `searchExtra.highlight`| `Record<string, string[]>`    | Per-field highlighted snippets (field name → list of HTML-marked fragments) |
+| Field                   | Type                       | Description                                                                 |
+| ----------------------- | -------------------------- | --------------------------------------------------------------------------- |
+| `searchExtra.score`     | number                     | Relevance score for the search hit                                          |
+| `searchExtra.highlight` | `Record<string, string[]>` | Per-field highlighted snippets (field name → list of HTML-marked fragments) |

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { communicationMode } = defineProps<{ communicationMode?: string }>();
 
-let iconName: string;
+let iconName: string | undefined;
 let useMankuIcon = false;
 
 switch (communicationMode) {
@@ -26,7 +26,7 @@ switch (communicationMode) {
 </script>
 
 <template>
-  <span v-if="communicationMode" class="p-1 m-1">
+  <span v-if="iconName" class="p-1 m-1">
     <span class="justify-center">
       <el-tooltip class="box-item" effect="light" :content="`CommunicationMode: ${communicationMode}`"
         placement="bottom">

@@ -135,7 +135,7 @@ const isMatch = (ann: { startMs: number; endMs: number }): boolean =>
 
 let resizeObserver: ResizeObserver | undefined;
 
-onMounted(() => {
+onMounted(async () => {
   if (containerRef.value) {
     containerWidth.value = containerRef.value.clientWidth;
     resizeObserver = new ResizeObserver((entries) => {
@@ -150,10 +150,9 @@ onMounted(() => {
   // settled so the px-per-ms scale is right)
   if (props.match) {
     const { startMs } = props.match;
-    nextTick(() => {
-      const scrollableWidth = containerWidth.value - TIER_LABEL_WIDTH;
-      containerRef.value?.scrollTo({ left: Math.max(0, startMs * pxPerMs.value - scrollableWidth / 3) });
-    });
+    await nextTick();
+    const scrollableWidth = containerWidth.value - TIER_LABEL_WIDTH;
+    containerRef.value?.scrollTo({ left: Math.max(0, startMs * pxPerMs.value - scrollableWidth / 3) });
   }
 });
 

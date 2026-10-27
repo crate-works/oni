@@ -18,7 +18,7 @@ const {
 const loginTermsURL = ref<string>();
 
 onMounted(async () => {
-  if (!loginTermsURL && manageTermsAndConditions) {
+  if (!authStore.loginTermsUrl && manageTermsAndConditions) {
     const terms = await api.getTerms();
     if ('error' in terms) {
       throw new Error(`could not get terms ${terms.error}`);

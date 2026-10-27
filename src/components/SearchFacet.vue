@@ -52,7 +52,7 @@ const filteredValues = computed(() => {
 });
 
 const updateFacet = () => {
-  emit('updated', facetName, selectedFacetValues);
+  emit('updated', facetName, selectedFacetValues.value);
 
   if (selectedFacetValues.value.length > 0) {
     emit('isActive');

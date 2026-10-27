@@ -153,19 +153,21 @@ const scrollToRow = (index: number) => {
   }
 };
 
-watch(activeRowIndex, (index) => {
+watch(activeRowIndex, async (index) => {
   if (index < 0) {
     return;
   }
 
-  nextTick(() => scrollToRow(index));
+  await nextTick();
+  scrollToRow(index);
 });
 
 // Scroll the deep-linked match into view once it appears in the rendered table
 watch(
   matchedRowIndex,
-  (index) => {
-    nextTick(() => scrollToRow(index));
+  async (index) => {
+    await nextTick();
+    scrollToRow(index);
   },
   { once: true },
 );

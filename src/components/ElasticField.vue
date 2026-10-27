@@ -18,9 +18,8 @@ const props = defineProps<{
 
 const { expand = [], byteFields = [], durationFields = [] } = ui.main;
 
-const testURL = (url: string) => {
-  if (url?.startsWith?.('http')) {
-    //TODO: make this a real url test
+const testURL = (url: unknown) => {
+  if (typeof url === 'string' && /^https?:\/\/\S+$/.test(url) && URL.canParse(url)) {
     return url;
   }
 };
@@ -54,6 +53,7 @@ const derived = computed(() => {
     name = formatDuration(field);
   } else if (['string', 'number', 'boolean'].includes(typeof field)) {
     name = String(field);
+    url = testURL(field);
   } else if (isIdentifier(field)) {
     identifier = first(field.name);
     name = first(field.value);

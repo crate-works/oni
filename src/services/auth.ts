@@ -1,13 +1,7 @@
-import { type User, UserManager, type UserManagerSettings, WebStorageStateStore } from 'oidc-client-ts';
+import { createOidcSession, type OidcSession, type OniUser as OidcUser } from '@researchdatabox/oni-client/oidc';
 
 import { api } from '@/configuration';
 import { useAuthStore } from '@/stores/auth';
-
-declare module 'oidc-client-ts' {
-  interface UserState {
-    returnUrl?: string;
-  }
-}
 
 export type OniUser = {
   email: string;
@@ -17,72 +11,59 @@ export type OniUser = {
   accessToken: string;
 };
 
-const clientId = api.oidc?.clientId || 'TODO';
+const clientId = api.oidc?.clientId;
 
-let userManager: UserManager | undefined;
-let isRedirecting = false;
+let session: OidcSession | undefined;
 
 let authReadyResolve: () => void;
 export const authReady: Promise<void> = new Promise((resolve) => {
   authReadyResolve = resolve;
 });
 
-const getUserManager = async () => {
-  const store = useAuthStore();
+const transformUser = (user: OidcUser): OniUser => ({
+  email: user.email || 'No email supplied',
+  firstName: user.firstName,
+  lastName: user.lastName,
+  name: user.name,
+  accessToken: user.accessToken,
+});
 
-  if (userManager) {
-    return userManager;
+const getSession = () => {
+  if (!clientId) {
+    throw new Error('OIDC is not configured');
+  }
+  if (session) {
+    return session;
   }
 
-  const config: UserManagerSettings = {
+  const store = useAuthStore();
+  const baseUrl = import.meta.env.BASE_URL;
+
+  session = createOidcSession({
     authority: api.oidc?.endpoint || api.rocrate.endpoint,
-    client_id: clientId,
-    redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
+    clientId,
+    redirectUri: `${window.location.origin}${baseUrl}auth/callback`,
     scope: api.oidc?.scope || 'public openid profile email',
-    response_type: 'code',
-    userStore: new WebStorageStateStore({ store: window.localStorage }),
-    automaticSilentRenew: true,
-  };
-
-  userManager = new UserManager(config);
-
-  userManager.events.addUserLoaded((user) => {
-    store.user = transformUser(user);
-    store.isLoggedIn = true;
+    storage: window.localStorage,
+    basePath: baseUrl,
+    loginOnRenewalFailure: true,
   });
 
-  userManager.events.addUserUnloaded(() => {
-    store.reset();
-  });
-
-  userManager.events.addAccessTokenExpired(async () => {
-    try {
-      await userManager?.signinSilent();
-    } catch {
+  session.subscribe(() => {
+    const state = session?.getState();
+    if (state?.status === 'authenticated') {
+      store.user = transformUser(state.user);
+      store.isLoggedIn = true;
+    } else if (state?.status === 'anonymous') {
       store.reset();
-      await login();
     }
   });
 
-  userManager.events.addSilentRenewError(async () => {
-    store.reset();
-    await login();
-  });
-
-  return userManager;
+  return session;
 };
 
-const transformUser = (user: User): OniUser => ({
-  email: user.profile.email || 'No email supplied',
-  firstName: user.profile.given_name,
-  lastName: user.profile.family_name,
-  name: user.profile.name,
-  accessToken: user.access_token,
-});
-
 export const initAuth = async () => {
-  // Skip auth hydration on the OAuth callback page — OauthCallbackView handles that flow
-  if (!clientId || window.location.pathname.endsWith('/auth/callback')) {
+  if (!clientId) {
     authReadyResolve();
     return;
   }
@@ -91,130 +72,52 @@ export const initAuth = async () => {
   localStorage.removeItem('auth');
 
   try {
-    const manager = await getUserManager();
-    const store = useAuthStore();
-    const user = await manager.getUser();
-
-    if (user && !user.expired) {
-      store.user = transformUser(user);
-      store.isLoggedIn = true;
-    } else if (user?.expired) {
-      try {
-        await manager.signinSilent();
-        // addUserLoaded event handler updates the store
-      } catch {
-        await manager.removeUser();
-        await login();
-      }
-    }
+    // Skips hydration on the OAuth callback page — OauthCallbackView handles that flow
+    await getSession().init();
   } finally {
     authReadyResolve();
   }
 };
 
-export const getValidAccessToken = async (): Promise<string | undefined> => {
-  if (!clientId) {
-    return undefined;
-  }
+export const getValidAccessToken = async (): Promise<string | undefined> =>
+  clientId ? getSession().getAccessToken() : undefined;
 
-  const store = useAuthStore();
-  const manager = await getUserManager();
-  const user = await manager.getUser();
-
-  if (!user) {
-    return undefined;
-  }
-
-  if (!user.expired) {
-    return user.access_token;
-  }
-
-  try {
-    const renewedUser = await manager.signinSilent();
-    return renewedUser?.access_token;
-  } catch {
-    store.reset();
-    await login();
-    return undefined;
-  }
-};
-
-// Force a token renewal via signinSilent, bypassing client-side expiry checks.
+// Force a token renewal, bypassing client-side expiry checks.
 // Used by the 401 retry path where the server rejects a token the client considers valid.
-export const forceRenewToken = async (): Promise<string | undefined> => {
-  if (!clientId) {
-    return undefined;
-  }
-
-  const store = useAuthStore();
-  const manager = await getUserManager();
-  const user = await manager.getUser();
-
-  // No stored session — signinSilent has nothing to renew from and will hang
-  // until the iframe timeout (~10s). Skip it and redirect straight to login.
-  if (!user) {
-    store.reset();
-    await login();
-    return undefined;
-  }
-
-  try {
-    const renewedUser = await manager.signinSilent();
-    return renewedUser?.access_token;
-  } catch {
-    store.reset();
-    await login();
-    return undefined;
-  }
-};
+export const forceRenewToken = async (): Promise<string | undefined> => (clientId ? getSession().renew() : undefined);
 
 export const login = async () => {
-  if (isRedirecting) {
+  if (!clientId) {
     return;
   }
-  isRedirecting = true;
-
   try {
-    const userManager = await getUserManager();
-
-    const baseUrl = import.meta.env.BASE_URL;
-    const path = window.location.pathname.startsWith(baseUrl)
-      ? window.location.pathname.slice(baseUrl.length)
-      : window.location.pathname;
-    const returnUrl = `/${path}${window.location.search}`;
-
-    await userManager.signinRedirect({ state: { returnUrl } });
-  } catch {
-    isRedirecting = false;
+    await getSession().login();
+  } catch (error) {
+    console.error('Login could not start', error);
   }
 };
 
 export const handleCallback = async () => {
-  const userManager = await getUserManager();
-
-  const user = await userManager.signinRedirectCallback();
-  const state = user.state as { returnUrl?: string } | undefined;
-  const returnUrl = state?.returnUrl || '/';
-
-  if (user) {
-    return { user: transformUser(user), returnUrl };
+  if (!clientId) {
+    return;
+  }
+  const result = await getSession().handleCallback();
+  if (result) {
+    return { user: transformUser(result.user), returnUrl: result.returnPath };
   }
 };
 
 export const getUser = async () => {
-  const userManager = await getUserManager();
-  const user = await userManager.getUser();
-  if (user && !user.expired) {
-    return transformUser(user);
+  if (!clientId) {
+    return;
   }
+  const user = await getSession().getUser();
+  return user && transformUser(user);
 };
 
 export const logout = async () => {
-  // TODO: Should we just log out of everything?
-  const user = await getUser();
-  if (user) {
-    const userManager = await getUserManager();
-    // We don't call signoutCallback as we don't want to necessarily sign the user out of Nabu for example just Oni
-    await userManager.removeUser();
+  // We don't sign out of the provider as we don't want to necessarily sign the user out of Nabu for example just Oni
+  if (clientId) {
+    await getSession().logout();
   }
 };

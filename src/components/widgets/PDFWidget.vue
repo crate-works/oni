@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { clampPage } from '@researchdatabox/oni-client';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
-import { clampPage } from '@/segments';
 
 const { src, initialPage } = defineProps<{
   src: string;

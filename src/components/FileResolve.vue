@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {
+  formatTimecode,
+  parsePageParam,
+  parseStartParam,
+  parseTierParam,
+  startParamToMs,
+} from '@researchdatabox/oni-client';
 import { computed, inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -10,14 +17,7 @@ import PlainTextWidget from '@/components/widgets/PlainTextWidget.vue';
 import { isFileVisibleByMetadata, resolveFileVisibilityConfig } from '@/composables/fileVisibility';
 import { ui } from '@/configuration';
 import { first } from '@/lib/tools';
-import {
-  fileDeepLink,
-  formatTimecode,
-  parsePageParam,
-  parseStartParam,
-  parseTierParam,
-  startParamToMs,
-} from '@/segments';
+import { fileDeepLink } from '@/segments';
 import type { AnnotationRef, ApiService, EntityType, RoCrate } from '@/services/api';
 
 const api = inject<ApiService>('api');

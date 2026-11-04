@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { OniClientError } from '@researchdatabox/oni-client';
 import { inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import AccessHelper from '@/components/AccessHelper.vue';
@@ -75,9 +76,9 @@ const getFileMetadata = async () => {
       parentUrl.value = `/entity?id=${encodeURIComponent(fileEntity.memberOf.id)}`;
     }
   } catch (e) {
-    // 'Not authorised' from the API's 401-retry path triggers a login redirect;
+    // The auth adapter handles an exhausted 401 retry with a login redirect;
     // swallow it so the (about-to-unload) view doesn't surface an uncaught rejection.
-    if (!(e instanceof Error && e.message === 'Not authorised')) {
+    if (!(e instanceof OniClientError && e.kind === 'unauthorized')) {
       throw e;
     }
   } finally {

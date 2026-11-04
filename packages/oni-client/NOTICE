@@ -1,0 +1,8 @@
+Oni client contains the API transport, types and pure transformations extracted
+from the Oni discovery portal: https://github.com/crate-works/oni
+
+Author: Moises Sacal and Oni contributors. Licensed under GPL-3.0, matching
+the portal. LICENSE contains the repository's full licence text.
+
+RO-Crate parsing uses the separately installed ro-crate dependency, which
+retains its own licence and notices. No dependencies are bundled here.

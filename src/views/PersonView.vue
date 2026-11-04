@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useGtm } from '@gtm-support/vue-gtm';
+import { OniClientError } from '@researchdatabox/oni-client';
 import { injectHead } from '@unhead/vue';
 import { computed, inject, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -246,7 +247,7 @@ const fetchData = async () => {
       value: id,
     });
   } catch (error) {
-    if (!(error instanceof Error && error.message === 'Not authorised')) {
+    if (!(error instanceof OniClientError && error.kind === 'unauthorized')) {
       throw error;
     }
   } finally {

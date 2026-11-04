@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { formatTimecode, matchAnnotation } from '@researchdatabox/oni-client';
 import type { TableInstance } from 'element-plus';
 import { computed, nextTick, ref, watch } from 'vue';
 import EafTimelineView from '@/components/widgets/EafTimelineView.vue';
 import { type EafDocument, parseEaf } from '@/composables/useEafParser';
-import { formatTimecode, matchAnnotation } from '@/segments';
 
 const props = defineProps<{
   src: string;

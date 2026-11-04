@@ -17,7 +17,7 @@ export const useHead = (head: VueHeadClient, md: RoCrate) => {
     }
 
     return value
-      .map((item) => (typeof item === 'object' && 'name' in item ? first(item.name) : String(item)))
+      .map((item) => (item !== null && typeof item === 'object' && 'name' in item ? first(item.name) : String(item)))
       .join(', ');
   };
 

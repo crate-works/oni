@@ -31,3 +31,36 @@ jobs:
 
       - name: Lint (${{ matrix.check }})
         run: pnpm run lint:${{ matrix.check }}
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check client types
+        run: pnpm --filter @researchdatabox/oni-client type-check
+
+      - name: Test client
+        run: pnpm --filter @researchdatabox/oni-client test
+
+      - name: Test portal
+        run: pnpm test:unit --run
+
+      - name: Build client
+        run: pnpm --filter @researchdatabox/oni-client build
+
+      - name: Build portal
+        run: pnpm build

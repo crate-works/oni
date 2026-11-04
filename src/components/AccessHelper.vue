@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { licenseLabel } from '@researchdatabox/oni-client';
 import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { joinAll } from '@/lib/tools';
 import type { ApiService, EntityType, RoCrate } from '@/services/api';
 
 const { t } = useI18n();
@@ -34,7 +34,7 @@ const {
   login: { enabled: isLoginEnabled },
 } = ui;
 
-const localLicense = license?.[0] || { '@id': 'missing', name: ['Missing'] as string[] };
+const localLicense = license?.length ? licenseLabel(license) : { full: 'Missing', url: undefined };
 
 const denial = computed(() =>
   level === 'metadata'
@@ -57,9 +57,8 @@ const denial = computed(() =>
       <p>
         <font-awesome-icon icon="fa-solid fa-5x fa-user-lock" />
         {{ t('access.accessTo') }}
-        <a :href="localLicense['@id']" class="font-bold">
-          {{ joinAll(localLicense.name) || localLicense['@id'] }}
-        </a>
+        <a v-if="localLicense.url" :href="localLicense.url" class="font-bold">{{ localLicense.full }}</a>
+        <span v-else class="font-bold">{{ localLicense.full }}</span>
         {{ t('access.grantedTo') }}
         {{ user?.['name'] || user?.['email'] }}
       </p>

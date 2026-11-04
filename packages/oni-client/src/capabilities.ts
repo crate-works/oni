@@ -4,15 +4,9 @@
 // keeps working.
 
 import { z } from 'zod/v4';
+import type { Filters } from './types.js';
 
-// An inclusive range constraint for a date or number filter (spec 0.2.0). At
-// least one bound; ISO 8601 strings for dates, numbers for numeric fields.
-type FilterRange = { gte?: string | number; lte?: string | number };
-
-// Search request filters: field name to selected terms, or for date/number
-// fields a range — single, or an array matched as an OR of its ranges. The
-// spec forbids mixing terms and ranges in one array.
-export type Filters = Record<string, string[] | FilterRange | FilterRange[]>;
+export type { Filters } from './types.js';
 
 const capabilitiesSchema = z.looseObject({
   apiVersion: z.string(),

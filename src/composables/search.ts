@@ -1,23 +1,22 @@
 import { useGtm } from '@gtm-support/vue-gtm';
+import {
+  type AdvancedSearchLine,
+  aggregateIntoDecades,
+  type Bucket,
+  buildSearchParams,
+  type HierarchicalBucket,
+  normaliseBookmarkFilters,
+  generateQueryString as sharedGenerateQueryString,
+} from '@researchdatabox/oni-client';
 import { inject, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { toRequestFilters, yearFromFilterValue } from '@/capabilities';
 import { defaultPageSize, ui } from '@/configuration';
-import type { ApiService, EntityType, GetSearchResponse, SearchParams } from '@/services/api';
+import type { ApiService, EntityType, GetSearchResponse } from '@/services/api';
 import { useCapabilitiesStore } from '@/stores/capabilities';
 
 const { mapConfig, searchFields } = ui;
 
-export type Bucket = {
-  name: string;
-  count: number;
-};
-
-export type HierarchicalBucket = {
-  name: string;
-  count: number;
-  children: Bucket[];
-};
+export type { AdvancedSearchLine, Bucket, HierarchicalBucket } from '@researchdatabox/oni-client';
 
 export type FacetType = {
   buckets: Bucket[] | HierarchicalBucket[];
@@ -27,14 +26,6 @@ export type FacetType = {
   active: boolean;
   help?: string;
   type?: 'standard' | 'hierarchical';
-};
-
-export type AdvancedSearchLine = {
-  field: string;
-  operation: string;
-  operator: string;
-  type: string;
-  searchInput: string;
 };
 
 export type SetSearchParamsOptions = {
@@ -57,34 +48,8 @@ export const ordering = [
   { value: 'desc', label: 'Descending' },
 ] as const;
 
-export const generateQueryString = (lines: AdvancedSearchLine[]) => {
-  let qS = '';
-
-  lines.forEach((sg, i) => {
-    let lastOneSG = false;
-    if (i + 1 === lines.length) {
-      lastOneSG = true;
-    }
-
-    if (sg.field === 'all_fields') {
-      let qqq = '( ';
-      Object.keys(searchFields).forEach((f, index, keys) => {
-        let lastOne = false;
-        if (index + 1 === keys.length) {
-          lastOne = true;
-        }
-        let qq = '';
-        qq = `${f} : ${sg.searchInput} ${!lastOne ? 'OR' : ''} `;
-        qqq += qq;
-      });
-      qS += `${qqq} ) ${!lastOneSG ? sg.operation : ''} `;
-    } else {
-      qS += ` ( ${sg.field}: (${sg.searchInput}) ) ${!lastOneSG ? sg.operation : ''}`;
-    }
-  });
-
-  return qS;
-};
+export const generateQueryString = (lines: AdvancedSearchLine[]) =>
+  sharedGenerateQueryString(lines, Object.keys(searchFields));
 
 export const useSearch = (searchType: 'list' | 'map') => {
   const router = useRouter();
@@ -156,13 +121,7 @@ export const useSearch = (searchType: 'list' | 'map') => {
 
     if (route.query.f) {
       const filterQuery = JSON.parse(decodeURIComponent(route.query.f.toString())) as Record<string, string[]>;
-      for (const [key, val] of Object.entries(filterQuery)) {
-        const values = capabilitiesStore.dateFilters.has(key) ? val.flatMap((v) => yearFromFilterValue(v) ?? []) : val;
-        filters.value[key] = values;
-        if (filters.value[key].length === 0) {
-          delete filters.value[key];
-        }
-      }
+      filters.value = normaliseBookmarkFilters(filterQuery, capabilitiesStore.dateFilters);
     }
 
     if (route.query.a) {
@@ -224,50 +183,34 @@ export const useSearch = (searchType: 'list' | 'map') => {
     }
   };
 
-  const calculatePrecision = (zoomLevel: number) => {
-    // This is a way to match zoom levels in leaflet vs precision levels in elastic/opensearch geoHashGridAggregation
-    let precision = Math.floor(zoomLevel / 2);
-
-    if (precision < 1) {
-      precision = 1;
-    } else if (precision > 7) {
-      precision = 7;
-    }
-
-    return precision;
-  };
-
   const search = async () => {
     filtersChanged.value = false;
 
     isLoading.value = true;
 
-    const query = advancedSearchEnabled.value
-      ? generateQueryString(
-          advancedSearchLines.value.map((l) => {
-            if (l.searchInput === '') {
-              l.searchInput = '*';
-            }
-            return l;
-          }),
-        )
-      : searchInput.value.toString();
+    // Preserve the editor's visible wildcard default; the shared builder is pure.
+    if (advancedSearchEnabled.value) {
+      for (const line of advancedSearchLines.value) {
+        if (line.searchInput === '') {
+          line.searchInput = '*';
+        }
+      }
+    }
 
     try {
-      const params: SearchParams = {
-        query,
-        searchType: advancedSearchEnabled.value ? 'advanced' : 'basic',
-        filters: toRequestFilters(filters.value, capabilitiesStore.dateFilters),
-        limit: pageSize.value,
-        offset: (currentPage.value - 1) * pageSize.value,
+      const params = buildSearchParams({
+        query: searchInput.value.toString(),
+        searchFields: Object.keys(searchFields),
+        advancedSearchEnabled: advancedSearchEnabled.value,
+        advancedSearchLines: advancedSearchLines.value,
+        filters: filters.value,
+        dateFields: capabilitiesStore.dateFilters,
+        pageSize: pageSize.value,
+        currentPage: currentPage.value,
         sort: selectedSorting.value?.value,
         order: selectedOrder.value?.value,
-      };
-
-      if (isMap) {
-        params.geohashPrecision = calculatePrecision(zoomLevel.value);
-        params.boundingBox = { ...boundingBox.value };
-      }
+        map: isMap ? { zoomLevel: zoomLevel.value, boundingBox: boundingBox.value } : undefined,
+      });
 
       const results = await api.search(params);
       if ('error' in results) {
@@ -309,54 +252,6 @@ export const useSearch = (searchType: 'list' | 'map') => {
       errorDialogText.value = err.message;
       isLoading.value = false;
     }
-  };
-
-  const aggregateIntoDecades = (yearBuckets: Array<{ name: string; count: number }>): HierarchicalBucket[] => {
-    const decadeMap = new Map<string, { count: number; years: Array<{ name: string; count: number }> }>();
-
-    for (const bucket of yearBuckets) {
-      // Parse the timestamp (in seconds since epoch)
-      const timestamp = Number.parseInt(bucket.name, 10);
-
-      // Skip invalid timestamps
-      if (Number.isNaN(timestamp)) {
-        continue;
-      }
-
-      // Convert timestamp (seconds) to milliseconds and create Date object
-      const date = new Date(timestamp);
-      const year = date.getFullYear();
-
-      // Skip invalid years
-      if (Number.isNaN(year)) {
-        continue;
-      }
-
-      const decadeStart = Math.floor(year / 10) * 10;
-      const decadeName = `${decadeStart}s`;
-
-      const decade = decadeMap.get(decadeName);
-      const yearBucket = { name: String(year), count: bucket.count };
-
-      if (decade) {
-        decade.count += bucket.count;
-        decade.years.push(yearBucket);
-      } else {
-        decadeMap.set(decadeName, { count: bucket.count, years: [yearBucket] });
-      }
-    }
-
-    const hierarchicalBuckets: HierarchicalBucket[] = [];
-
-    for (const [decadeName, data] of decadeMap.entries()) {
-      hierarchicalBuckets.push({
-        name: decadeName,
-        count: data.count,
-        children: data.years.sort((a, b) => Number.parseInt(a.name, 10) - Number.parseInt(b.name, 10)),
-      });
-    }
-
-    return hierarchicalBuckets;
   };
 
   // The facet panel derives from the last search response plus the facet

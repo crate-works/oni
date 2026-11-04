@@ -13,13 +13,13 @@ RO-Crate API.
 - **App:** Vue 3 (Composition API, `<script setup>`) + TypeScript, Vite, Tailwind CSS 4
 - **UI:** Element Plus, FontAwesome, Leaflet (maps)
 - **State + routing:** Pinia (with `pinia-plugin-persistedstate`), Vue Router 5
-- **API + auth:** native `fetch` (`src/services/api.ts`), `oidc-client-ts`
+- **API + auth:** `@researchdatabox/oni-client` via `src/services/api.ts`, `oidc-client-ts`
 - **Testing + quality:** Vitest + jsdom, Biome, Knip, vue-tsc
-- **Tooling:** pnpm 10, Node ≥22.18, lefthook, commitlint (Conventional Commits)
+- **Tooling:** pnpm 12.6.0, Node ^24.15.0 or ≥26, lefthook, commitlint (Conventional Commits)
 
 ## Quickstart
 
-Prerequisites: **Node ≥22.18** and **pnpm 10**. The easiest way to get pnpm
+Prerequisites: **Node ^24.15.0 or ≥26** and **pnpm 12.6.0**. The easiest way to get pnpm
 is via corepack:
 
 ```sh
@@ -86,16 +86,17 @@ Any target can be tweaked the same way with `.env.<mode>.local`, `.env.local`
 ```
 public/                  Static assets served at the web root
 plugins/                 Dev-server plugin serving the target's config and assets
+packages/oni-client/     Framework-independent API client and pure helpers
 configuration.local.json Config for `pnpm dev:local` (gitignored)
 src/
   views/                 Page-level components, one per route
   components/            Reusable components (cards/, widgets/)
   composables/           Shared composition functions (useEntityView, useEafParser, search, head/meta)
-  services/              api.ts (ApiService), auth.ts (OIDC)
+  services/              api.ts (client facade), auth.ts (OIDC)
   stores/                Pinia stores (auth, i18n, splash) with localStorage persistence
   router/                Vue Router 5, history mode, auth guards
   configuration.ts       Zod schema for /configuration.json
-  tools.ts               Formatting helpers (first(), file sizes, durations, getEntityUrl)
+  lib/tools.ts           Portal formatting and route helpers; re-exports first()
 scripts/                 Build-time scripts (vocab fetching)
 docker/                  Production image (nginx + built dist)
 docs/
@@ -105,23 +106,28 @@ docs/
 
 A few patterns worth knowing before reading the code:
 
+- This is a pnpm workspace: the Vue app stays at the root and consumes
+  `packages/oni-client` through `workspace:*`. Portal commands read client
+  TypeScript source directly. Alternative frontends can consume the built package;
+  see its [usage and API documentation](packages/oni-client/README.md).
 - `ApiService` is provided via Vue's `provide`/`inject` from `main.ts` — inject it where needed rather than constructing your own.
 - API responses are RO-Crate and parsed with the [`ro-crate`](https://www.npmjs.com/package/ro-crate) library.
-- Many entity fields are `string | string[]`. Use `first()` from `src/tools.ts` for safe single-value access.
+- Many entity fields are `string | string[]`. Use `first()` from `@researchdatabox/oni-client` (also re-exported by `src/lib/tools.ts`) for safe single-value access.
 
 ## Development workflow
 
-| Command                        | Purpose                                                                              |
-| ------------------------------ | ------------------------------------------------------------------------------------ |
-| `pnpm dev`                     | Start the Vite dev server on port 5173 (PARADISEC staging)                           |
-| `pnpm dev:<target>`            | Start the dev server against `paradisec-stage`, `paradisec`, `ldaca-dev`, or `local` |
-| `pnpm build`                   | Type-check + production build, run in parallel                                       |
-| `pnpm preview`                 | Serve the production build locally                                                   |
-| `pnpm test:unit`               | Vitest unit tests (jsdom)                                                            |
-| `pnpm lint:biome`              | Biome lint + format check                                                            |
-| `pnpm lint:types`              | `vue-tsc --noEmit` type check                                                        |
-| `pnpm lint:knip`               | Detect unused files, exports, and dependencies                                       |
-| `pnpm setup:vocabs vocab.json` | Refresh vocabs manually (also runs after `pnpm install`)                             |
+| Command                                          | Purpose                                                                              |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `pnpm dev`                                       | Start the Vite dev server on port 5173 (PARADISEC staging)                           |
+| `pnpm dev:<target>`                              | Start the dev server against `paradisec-stage`, `paradisec`, `ldaca-dev`, or `local` |
+| `pnpm build`                                     | Type-check and build the portal in parallel                                          |
+| `pnpm preview`                                   | Serve the production build locally                                                   |
+| `pnpm test:unit`                                 | Vitest unit tests (jsdom)                                                            |
+| `pnpm --filter @researchdatabox/oni-client test` | Client unit tests (Node)                                                             |
+| `pnpm lint:biome`                                | Biome lint + format check                                                            |
+| `pnpm lint:types`                                | `vue-tsc --build` type check                                                         |
+| `pnpm lint:knip`                                 | Detect unused files, exports, and dependencies                                       |
+| `pnpm setup:vocabs vocab.json`                   | Refresh vocabs manually (also runs after `pnpm install`)                             |
 
 Pre-commit hooks (lefthook) run `lint:biome`, `lint:types`, and `lint:knip`
 in parallel on every commit. Don't bypass them with `--no-verify` — fix the

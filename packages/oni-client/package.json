@@ -1,0 +1,69 @@
+{
+  "name": "@researchdatabox/oni-client",
+  "version": "0.1.0-next.1",
+  "description": "Framework-independent client for the Oni RO-Crate API",
+  "type": "module",
+  "license": "GPL-3.0",
+  "engines": {
+    "node": "^24.15.0 || >=26.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "@researchdatabox/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./oidc": {
+      "@researchdatabox/source": "./src/oidc.ts",
+      "types": "./dist/oidc.d.ts",
+      "import": "./dist/oidc.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm build"
+  },
+  "devDependencies": {
+    "oidc-client-ts": "^3.5.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "ro-crate": "^3.7.2",
+    "zod": "^4.6.5"
+  },
+  "peerDependencies": {
+    "oidc-client-ts": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "oidc-client-ts": {
+      "optional": true
+    }
+  },
+  "author": "Moises Sacal",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crate-works/oni.git",
+    "directory": "packages/oni-client"
+  },
+  "homepage": "https://github.com/crate-works/oni/tree/main/packages/oni-client",
+  "bugs": {
+    "url": "https://github.com/crate-works/oni/issues"
+  }
+}

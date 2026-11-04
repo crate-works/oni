@@ -1,8 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import {
   clampPage,
-  fileDeepLink,
   formatTimecode,
   matchAnnotation,
   parsePageParam,
@@ -10,10 +7,10 @@ import {
   parseTierParam,
   type SearchSegment,
   segmentLabel,
-  segmentRows,
-  segmentUrl,
   startParamToMs,
-} from '@/segments';
+} from '@researchdatabox/oni-client';
+import { describe, expect, it } from 'vitest';
+import { fileDeepLink, segmentRows, segmentUrl } from '@/segments';
 
 const pageSegment: SearchSegment = { type: 'page', page: 4, highlight: ['...<mark>kurrama</mark>...'] };
 const annotationSegment: SearchSegment = {

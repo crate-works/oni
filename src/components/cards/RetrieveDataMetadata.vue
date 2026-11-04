@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { extractPropertyFromIdentifier } from '@researchdatabox/oni-client';
 import { inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { first } from '@/lib/tools';
 import type { ApiService, RoCrate } from '@/services/api';
 
 const { t } = useI18n();
@@ -24,7 +24,7 @@ const generateDownloadLink = async (onBlank: boolean) => {
     return;
   }
 
-  const shortIdentifier = first(identifier.find((i) => first(i.name) === 'identifier')?.value);
+  const shortIdentifier = extractPropertyFromIdentifier(identifier, 'identifier');
 
   const a = document.createElement('a');
   a.href = url;

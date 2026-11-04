@@ -1,6 +1,6 @@
+import { parseContentSize } from '@researchdatabox/oni-client';
 import { describe, expect, it } from 'vitest';
-
-import { groupMediaTypesByIcon, isAbsoluteUrl, parseContentSize } from '@/lib/tools';
+import { groupMediaTypesByIcon, isAbsoluteUrl } from '@/lib/tools';
 
 describe('parseContentSize', () => {
   it('should return the number itself if it is a valid number and in bytes', () => {

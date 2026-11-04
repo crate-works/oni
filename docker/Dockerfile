@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY scripts ./scripts
+COPY packages/oni-client/package.json ./packages/oni-client/package.json
 
 RUN corepack enable && pnpm install --frozen-lockfile
 

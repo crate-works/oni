@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { AnnotationInterval } from '@researchdatabox/oni-client';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { EafTier } from '@/composables/useEafParser';
-import type { AnnotationInterval } from '@/segments';
 
 const props = defineProps<{
   tiers: EafTier[];

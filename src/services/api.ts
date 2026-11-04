@@ -1,477 +1,141 @@
-import { ROCrate } from 'ro-crate';
+import {
+  createOniClient,
+  type GetEntitiesParams,
+  type GetFilesParams,
+  type GetZipMetaResponse,
+  OniClientError,
+  type RequestOptions,
+  type SearchParams,
+} from '@researchdatabox/oni-client';
 
-import type { Filters } from '@/capabilities';
 import { api } from '@/configuration';
-import { parseContentSize } from '@/lib/tools';
-import type { SearchSegment } from '@/segments';
 import { forceRenewToken, getValidAccessToken } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
 import { useCapabilitiesStore } from '@/stores/capabilities';
 
-// TODO: use zod to validate the response we get back
+export type {
+  AnnotationRef,
+  Announcement,
+  EntityType,
+  FileType,
+  GetEntitiesParams,
+  GetEntitiesResponse,
+  GetFilesParams,
+  GetSearchResponse,
+  GetTermsResponse,
+  GetZipMetaResponse,
+  RoCrate,
+  SearchParams,
+} from '@researchdatabox/oni-client';
 
-type CommonParams = {
-  limit?: number;
-  offset?: number;
-  sort?: string;
-  order?: string;
-};
+type ErrorResponse = { error: string; status?: number };
 
-export type GetEntitiesParams = CommonParams & {
-  entityType?: string;
-  memberOf?: string;
-};
-
-export type GetFilesParams = CommonParams & {
-  memberOf?: string;
-};
-
-export type SearchParams = CommonParams & {
-  searchType?: 'basic' | 'advanced';
-  query: string;
-  filters?: Filters;
-  boundingBox?: {
-    topRight: { lat: number; lng: number };
-    bottomLeft: { lat: number; lng: number };
-  };
-  geohashPrecision?: number;
-};
-
-// TODO: Can we get the types from the API?
-export type EntityType = {
-  id: string;
-  name: string;
-  description?: string;
-  identifiers?: {
-    collectionIdentifier: string;
-    itemIdentifier: string;
-    shortIdentifier: string;
-  };
-  entityType: string;
-  memberOf?: {
-    id: string;
-    name?: string;
-  } | null;
-  rootCollection?: {
-    id: string;
-    name?: string;
-  } | null;
-  metadataLicenseId: string;
-  contentLicenseId: string;
-  access: {
-    metadata: boolean;
-    content: boolean;
-    metadataAuthorizationUrl?: string;
-    contentAuthorizationUrl?: string;
-  };
-  counts: {
-    collections: number;
-    objects: number;
-    subCollections: number;
-    files: number;
-  };
-  language: Array<string>;
-  communicationMode: 'Song' | 'Spoken';
-  mediaType: Array<string>;
-  accessControl: 'Public' | 'Restricted';
-  searchExtra?: { score: number; highlight: Record<string, string[]>; segments?: SearchSegment[] };
-};
-
-type ApiErrorBody = {
-  error: {
-    code: string;
-    message: string;
-    details?: object;
-    requestId?: string;
-  };
-};
-
-type ErrorResponse = {
-  error: string;
-  status?: number;
-};
-
-export type GetEntitiesResponse = {
-  total: number;
-  entities: Array<EntityType>;
-};
-
-type GetEntityResponse = EntityType;
-
-export type GetSearchResponse = {
-  total: number;
-  searchTime: number;
-  entities: Array<EntityType>;
-  facets: Record<string, { name: string; count: number }[]>;
-  geohashGrid: Record<string, number>;
-};
-
-export type FileType = {
-  id: string;
-  filename: string;
-  mediaType: string;
-  size: number;
-  access: {
-    content: boolean;
-    contentAuthorizationUrl?: string;
-  };
-};
-
-type GetFilesResponse = {
-  total: number;
-  files: Array<FileType>;
-};
-
-export type GetTermsResponse = {
-  id: number;
-  body: string;
-  url: string;
-  description: string;
-  agreement: boolean;
-};
-
-export type Announcement = {
-  id: number;
-  message: string;
-};
-
-type GetAnnouncementsResponse = {
-  announcements: Announcement[];
-};
-
-type AcceptTermsResponse = {
-  accept: boolean;
-};
-
-export type GetZipMetaResponse =
-  | {
-      status: 'ok';
-      expandedSize: number | null;
-      numberOfFiles: number;
-      url: string;
-    }
-  | {
-      status: 'noAccess';
-    }
-  | {
-      status: 'notFound';
-    };
-
-type ROCratePerson = {
-  '@type': string[];
-  description?: string[];
-  name: string[];
-};
-
-type RoCrateLicense = {
-  '@id': string;
-  '@type': string[];
-  name: string[];
-  description?: string[];
-  'ldac:access': string[];
-  metadataIsPublic?: boolean[];
-  allowTextIndex?: boolean[];
-};
-
-export type AnnotationRef = { '@id': string; filename?: string[] };
-
-export type RoCrate = {
-  '@id': string;
-  '@type': string[];
-  name: string[];
-  creditText: string[];
-  identifier: { name: string[]; value: string[] }[];
-  datePublished: string[];
-  doi?: string[];
-  'pcdm:memberOf'?: { '@id': string; name?: string[] }[];
-  license?: RoCrateLicense[];
-  metadataLicense?: { '@id': string; name: string[] }[];
-  author?: ROCratePerson[];
-  creator?: ROCratePerson[];
-  hasPart: {
-    '@id': string;
-    filename: string[];
-    encodingFormat: string[];
-    contentSize: number[];
-    hasAnnotation?: AnnotationRef[];
-    annotationOf?: AnnotationRef[];
-  }[];
-};
-
+/** Portal configuration/session adapter. All transport belongs to oni-client. */
 export class ApiService {
-  #apiUri: string;
-  #clientId: string | undefined;
-  #usesRedirects: boolean | undefined;
-  #store: ReturnType<typeof useAuthStore>;
+  #client;
   #capabilities: ReturnType<typeof useCapabilitiesStore>;
 
   constructor() {
-    const { endpoint, usesRedirects } = api.rocrate;
-    this.#apiUri = `${endpoint}`;
-    this.#clientId = api.oidc?.clientId;
-    this.#store = useAuthStore();
+    const store = useAuthStore();
     this.#capabilities = useCapabilitiesStore();
-    this.#usesRedirects = usesRedirects;
+    this.#client = createOniClient({
+      endpoint: api.rocrate.endpoint,
+      baseUrl: document.baseURI,
+      fileDelivery: { usesRedirects: api.rocrate.usesRedirects, baseUrl: window.location.origin },
+      auth: api.oidc?.clientId
+        ? {
+            getAccessToken: getValidAccessToken,
+            renewAccessToken: forceRenewToken,
+            onUnauthorized: () => store.reset(),
+          }
+        : undefined,
+    });
   }
 
-  async getEntities(params: GetEntitiesParams) {
-    const entities = await this.#get<GetEntitiesResponse>('/entities', params as Record<string, string>);
-
-    return entities;
+  async #legacy<T>(operation: () => Promise<T>, metadata = false): Promise<T | ErrorResponse> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof OniClientError) {
+        if (error.kind === 'not-found') {
+          return { error: 'Not found' };
+        }
+        if (metadata && error.kind === 'metadata-denied') {
+          return { error: 'Forbidden', status: 403 };
+        }
+      }
+      throw error;
+    }
   }
 
-  async getFiles(params: GetFilesParams) {
-    const files = await this.#get<GetFilesResponse>('/files', params as Record<string, string>);
-
-    return files;
+  getEntities(params: GetEntitiesParams, opts?: RequestOptions) {
+    return this.#legacy(() => this.#client.getEntities(params, opts));
   }
 
-  // Filters are sanitised at the API seam so no caller can send keys the API
-  // rejects with a 400; the store passes them through untouched until
-  // capabilities has loaded.
-  async search(params: SearchParams) {
+  getFiles(params: GetFilesParams, opts?: RequestOptions) {
+    return this.#legacy(() => this.#client.getFiles(params, opts));
+  }
+
+  search(params: SearchParams, opts?: RequestOptions) {
     if (params.filters) {
       params = { ...params, filters: this.#capabilities.sanitiseFilters(params.filters) };
     }
-
-    const response = await this.#post<GetSearchResponse>('/search', params as unknown as Record<string, string>);
-
-    return response;
+    return this.#legacy(() => this.#client.search(params, opts));
   }
 
-  #getEntityMetadata(id: string) {
-    return this.#get<object | ErrorResponse>(`/entity/${encodeURIComponent(id)}/metadata`, undefined, {
-      deniedAsError: true,
+  async getRoCrateJSON(id: string, opts?: RequestOptions) {
+    return JSON.stringify(await this.#legacy(() => this.#client.getEntityMetadata(id, opts), true));
+  }
+
+  getRoCrate(id: string, opts?: RequestOptions) {
+    return this.#legacy(async () => ({ metadata: await this.#client.getRoCrate(id, opts) }), true);
+  }
+
+  getEntity(id: string, opts?: RequestOptions) {
+    return this.#legacy(async () => ({ entity: await this.#client.getEntity(id, opts) }));
+  }
+
+  getEntityWithMetadata(id: string, opts?: RequestOptions) {
+    return this.#legacy(async () => {
+      const { entity, metadata } = await this.#client.getEntityWithMetadata(id, opts);
+      return metadata ? { entity, metadata } : { entity };
     });
   }
 
-  async getRoCrateJSON(id: string) {
-    const crateJson = await this.#getEntityMetadata(id);
-
-    return JSON.stringify(crateJson);
+  async getFileUrl(id: string, path?: string, downloadable = false, opts?: RequestOptions) {
+    const result = await this.#legacy(() => this.#client.getFileUrl(id, path, downloadable, opts));
+    return typeof result === 'string' ? result : undefined;
   }
 
-  async getRoCrate(id: string): Promise<ErrorResponse | { metadata: RoCrate }> {
-    const crateJson = await this.#getEntityMetadata(id);
-
-    if ('error' in crateJson) {
-      return crateJson as ErrorResponse;
-    }
-
-    const crate = new ROCrate(crateJson, { array: true, link: true });
-
-    return { metadata: crate.rootDataset as RoCrate };
+  getTerms(opts?: RequestOptions) {
+    return this.#legacy(() => this.#client.getTerms(opts));
   }
 
-  async getEntity(id: string) {
-    const entity = await this.#get<GetEntityResponse>(`/entity/${encodeURIComponent(id)}`);
-
-    if ('error' in entity) {
-      return { error: entity.error };
-    }
-
-    return { entity };
+  acceptTerms(id: number, opts?: RequestOptions) {
+    return this.#legacy(() => this.#client.acceptTerms(id, opts));
   }
 
-  // metadata is undefined when the Record denies it or the server refuses it.
-  async getEntityWithMetadata(id: string): Promise<ErrorResponse | { entity: EntityType; metadata?: RoCrate }> {
-    const result = await this.getEntity(id);
-    if ('error' in result || !result.entity.access.metadata) {
-      return result;
-    }
-
-    const crate = await this.getRoCrate(id);
-    if ('error' in crate) {
-      return crate.status === 403 ? result : { error: crate.error };
-    }
-
-    return { entity: result.entity, metadata: crate.metadata };
+  getAnnouncements(opts?: RequestOptions) {
+    return this.#legacy(() => this.#client.getAnnouncements(opts));
   }
 
-  async getFileUrl(id: string, path: string, downloadable = false) {
-    const params = {
-      disposition: downloadable ? 'attachment' : 'inline',
-      filename: path,
-    };
-
-    if (!this.#usesRedirects) {
-      const queryString = new URLSearchParams(params).toString();
-
-      const filePath = `/file/${encodeURIComponent(id)}?${queryString}`;
-
-      const url = `${this.#apiUri}${filePath}`;
-
-      return url;
-    }
-
-    const url = `/file/${encodeURIComponent(id)}`;
-
-    const json = await this.#get<{ location: string } | ErrorResponse>(url, { ...params, noRedirect: 'true' });
-    if ('error' in json) {
-      return;
-    }
-
-    return json.location;
+  getCapabilities(opts?: RequestOptions) {
+    return this.#legacy(() => this.#client.getCapabilities(opts));
   }
 
-  async getTerms() {
-    const terms = await this.#get<GetTermsResponse>('/user/terms');
-
-    return terms;
-  }
-
-  async getAnnouncements() {
-    return this.#get<GetAnnouncementsResponse>('/announcements');
-  }
-
-  // Returns the raw JSON body — the capabilities store validates it at the
-  // trust boundary, treating anything malformed as non-conformance.
-  async getCapabilities() {
-    return this.#get<object>('/capabilities');
-  }
-
-  async acceptTerms(id: number) {
-    const terms = await this.#post<AcceptTermsResponse>('/user/terms/accept', { id: String(id) });
-
-    return terms;
-  }
-
-  async getZipMeta(id: string): Promise<GetZipMetaResponse> {
-    const response = await this.#head(`/zip/${encodeURIComponent(id)}`);
-
-    if (response.status === 403) {
-      return { status: 'noAccess' };
-    }
-
-    if (response.status === 404) {
-      return { status: 'notFound' };
-    }
-
-    if (response.status !== 200) {
-      throw new Error(`Error fetching zip metadata: ${response.statusText}`);
-    }
-
-    const size = response.headers.get('Content-Length-Estimate') || '0';
-    const expandedSize = parseContentSize(Number.parseInt(size, 10));
-    const numberOfFiles = response.headers.get('Archive-File-Count') || '0';
-
-    return {
-      status: 'ok',
-      expandedSize,
-      numberOfFiles: Number.parseInt(numberOfFiles, 10),
-      url: response.url,
-    };
-  }
-
-  async #getHeaders() {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (this.#clientId) {
-      const token = await getValidAccessToken();
-      if (token) {
-        headers.authorization = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
-  }
-
-  async #fetchWithRetry(
-    url: string,
-    init: Omit<RequestInit, 'headers'> & { headers: Record<string, string> },
-  ): Promise<Response> {
-    const response = await fetch(url, init);
-
-    if (response.status === 401 && this.#clientId) {
-      // Server rejected the token — force a renewal (bypasses client-side expiry check)
-      const newToken = await forceRenewToken();
-      if (newToken) {
-        const retryHeaders = { ...init.headers, authorization: `Bearer ${newToken}` };
-        const retryResponse = await fetch(url, { ...init, headers: retryHeaders });
-
-        if (retryResponse.status !== 401) {
-          return retryResponse;
+  async getZipMeta(id: string, opts?: RequestOptions): Promise<GetZipMetaResponse> {
+    try {
+      return await this.#client.getZipMeta(id, opts);
+    } catch (error) {
+      if (error instanceof OniClientError) {
+        if (error.kind === 'forbidden') {
+          return { status: 'noAccess' };
+        }
+        if (error.kind === 'not-found') {
+          return { status: 'notFound' };
         }
       }
-
-      this.#store.reset();
-      throw new Error('Not authorised');
+      throw error;
     }
-
-    return response;
-  }
-
-  #throwOnApiError(data: unknown): never {
-    if (data && typeof data === 'object' && 'error' in data) {
-      const body = data as ApiErrorBody;
-      if (typeof body.error === 'object' && body.error !== null && 'message' in body.error) {
-        throw new Error(body.error.message);
-      }
-    }
-    throw new Error('Unexpected error response');
-  }
-
-  async #get<T extends object>(
-    path: string,
-    params?: Record<string, string>,
-    { deniedAsError = false } = {},
-  ): Promise<T | ErrorResponse> {
-    const headers = await this.#getHeaders();
-    const queryString = params ? new URLSearchParams(params).toString() : undefined;
-
-    const url = `${this.#apiUri}${path}${queryString ? `?${queryString}` : ''}`;
-    const response = await this.#fetchWithRetry(url, { method: 'GET', headers });
-
-    if (response.status === 404) {
-      return { error: 'Not found' };
-    }
-
-    if (response.status === 401) {
-      throw new Error('Not authorised');
-    }
-
-    if (response.status === 403 && deniedAsError) {
-      return { error: 'Forbidden', status: 403 };
-    }
-
-    const data = (await response.json()) as T | ApiErrorBody;
-
-    if (response.status !== 200) {
-      this.#throwOnApiError(data);
-    }
-
-    return data as T;
-  }
-
-  async #post<T extends object>(path: string, body: object): Promise<T | ErrorResponse> {
-    const headers = await this.#getHeaders();
-    const response = await this.#fetchWithRetry(`${this.#apiUri}${path}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
-
-    if (response.status === 404) {
-      return { error: 'Not found' };
-    }
-
-    const data = (await response.json()) as T | ApiErrorBody;
-
-    if (response.status !== 200) {
-      this.#throwOnApiError(data);
-    }
-
-    return data as T;
-  }
-
-  // NOTE: This is a bit different, consider refactoring if anything other than zip uses it
-  async #head(path: string) {
-    const headers = await this.#getHeaders();
-
-    const url = `${this.#apiUri}${path}`;
-    const response = await this.#fetchWithRetry(url, { method: 'HEAD', headers });
-
-    return response;
   }
 }

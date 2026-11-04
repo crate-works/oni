@@ -1,7 +1,12 @@
 import type { KnipConfig } from 'knip';
 
 const config: KnipConfig = {
-  entry: ['scripts/*.mts', 'src/assets/main.css', '**/__tests__/*'],
+  workspaces: {
+    '.': {
+      entry: ['src/configuration.ts', 'scripts/*.mts', 'src/assets/main.css', 'src/__tests__/*'],
+    },
+    'packages/oni-client': {},
+  },
   ignoreDependencies: [
     '@tsconfig/node-lts',
     '@total-typescript/ts-reset',

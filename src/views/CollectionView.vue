@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useGtm } from '@gtm-support/vue-gtm';
+import { OniClientError } from '@researchdatabox/oni-client';
 import { injectHead } from '@unhead/vue';
 import { inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -76,9 +77,9 @@ const fetchData = async () => {
 
     populate(result.entity, result.metadata);
   } catch (e) {
-    // 'Not authorised' from the API's 401-retry path triggers a login redirect;
+    // The auth adapter handles an exhausted 401 retry with a login redirect;
     // don't surface it — the view is about to unload.
-    if (!(e instanceof Error && e.message === 'Not authorised')) {
+    if (!(e instanceof OniClientError && e.kind === 'unauthorized')) {
       console.error(e);
     }
   } finally {

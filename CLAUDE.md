@@ -8,7 +8,9 @@ oni-ui is a Vue 3 + TypeScript discovery portal for browsing research metadata i
 
 - `pnpm dev` — start dev server (Vite, port 5173) against PARADISEC staging; `pnpm dev:<target>` for `paradisec-stage`, `paradisec`, `ldaca-dev`, `local` (a local config file)
 - `pnpm build` — production build (type-check + vite build in parallel)
-- `pnpm test:unit` — run tests (Vitest with jsdom)
+- `pnpm test:unit` — run portal tests (Vitest with jsdom)
+- `pnpm --filter @researchdatabox/oni-client test` — run client tests (Vitest with Node)
+- `pnpm --filter @researchdatabox/oni-client type-check` / `build` — check client types / emit JavaScript and declarations
 - `pnpm lint:biome` — lint and format check (Biome)
 - `pnpm lint:types` — type checking (`vue-tsc`)
 - `pnpm lint:knip` — detect unused exports/dependencies
@@ -23,10 +25,17 @@ Vue 3 (Composition API, `<script setup>`) + TypeScript + Vite + Tailwind CSS 4 +
 
 ### Key directories
 
+The Vue portal stays at the repository root in a pnpm workspace. It depends on
+`@researchdatabox/oni-client` via `workspace:*`. Vite, Vitest and the app
+TypeScript configs use the `@researchdatabox/source` export condition to read
+client source directly; portal commands need no client prebuild. The client
+build emits `dist/` for consumers using the default package exports.
+
+- `packages/oni-client/src/` — framework-independent transport, wire types and pure helpers; Node tests in `packages/oni-client/test/`
 - `src/views/` — page-level components, one per route
 - `src/components/` — reusable components; `cards/` for card layouts, `widgets/` for small pieces
 - `src/composables/` — shared composition functions (`useEntityView`, `useEafParser`, search logic, head/meta)
-- `src/services/` — `api.ts` (fetch-based ApiService), `auth.ts` (OIDC via oidc-client-ts)
+- `src/services/` — `api.ts` (ApiService facade over `createOniClient`), `auth.ts` (Pinia/router adapter over the client's `createOidcSession` from `@researchdatabox/oni-client/oidc`)
 - `src/stores/` — Pinia stores (auth, i18n, splash) with localStorage persistence
 - `src/router/` — Vue Router 5 with history mode, auth guards
 - `src/configuration.ts` — Zod schema defining all configuration options
@@ -34,9 +43,11 @@ Vue 3 (Composition API, `<script setup>`) + TypeScript + Vite + Tailwind CSS 4 +
 ### Data flow
 
 - `ApiService` is provided via Vue's `provide`/`inject` from `main.ts`
-- API responses use RO-Crate format, parsed with the `ro-crate` library
-- Many entity fields are `string | string[]` — use `first()` from `src/tools.ts` for safe single-value access
-- `src/tools.ts` has utility functions for formatting (file sizes, durations), URL generation (`getEntityUrl`), and text manipulation
+- `src/services/api.ts` supplies portal URLs and optional OIDC callbacks to `createOniClient`, and adapts client errors to the existing view contracts
+- API responses use RO-Crate format, parsed inside the client with `ro-crate`
+- Pure helpers live in `packages/oni-client/src/{capabilities,search,metadata,segments,tools}.ts`, with display helpers (licences, identifiers, descriptions, formats, hidden files) in `{values,license,identifiers,description,formats,files}.ts` and are exported from `@researchdatabox/oni-client`; `tools.ts` includes `first()` for single-value access
+- Portal adapters retain configuration, Vue state and routing: `src/stores/capabilities.ts`, `src/composables/search.ts`, `src/lib/metadata.ts`, `src/segments.ts` and `src/lib/tools.ts`
+- `src/lib/tools.ts` re-exports `first()` / `joinAll()` and keeps portal formatting, text and route helpers
 
 ### Configuration
 
@@ -66,4 +77,5 @@ Uses the default label names (`needs-triage`, `needs-info`, `ready-for-agent`, `
 
 ### Domain docs
 
-Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+See `docs/agents/domain.md` for guidance on domain documentation when present.
+This repository currently has no root glossary or ADR directory.

@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import {
   dateFilterNames,
   facetTypeFor,
@@ -8,7 +6,8 @@ import {
   stripUnsupportedFilters,
   toRequestFilters,
   yearFromFilterValue,
-} from '@/capabilities';
+} from '@researchdatabox/oni-client';
+import { describe, expect, it } from 'vitest';
 import { validPayload } from './fixtures/capabilities';
 
 describe('parseCapabilities', () => {

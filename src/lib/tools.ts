@@ -1,13 +1,11 @@
-import type { EntityType } from '@/services/api';
+import {
+  getBasePathUrl as sharedGetBasePathUrl,
+  getEntityUrl as sharedGetEntityUrl,
+} from '@researchdatabox/oni-client';
 
-const unitMultipliers = {
-  bytes: 1,
-  b: 1,
-  kb: 1024,
-  mb: 1024 ** 2,
-  gb: 1024 ** 3,
-  tb: 1024 ** 4,
-};
+export { first, joinAll } from '@researchdatabox/oni-client';
+
+import type { EntityType } from '@/services/api';
 
 export const formatFileSize = (bytes: number, locales = 'en') => {
   if (!bytes || bytes === 0) {
@@ -29,18 +27,6 @@ export const formatFileSize = (bytes: number, locales = 'en') => {
   return `${formatter.format(value)} ${units[i]}`;
 };
 
-export const joinAll = (arr: string | string[] | undefined, separator = ' | '): string => {
-  if (!arr) {
-    return '';
-  }
-
-  if (!Array.isArray(arr)) {
-    return arr;
-  }
-
-  return arr.filter(Boolean).join(separator);
-};
-
 export const shortenText = (input: string, { minLength = 0, maxLength = 24 } = {}) => {
   if (!input) {
     return input;
@@ -51,32 +37,6 @@ export const shortenText = (input: string, { minLength = 0, maxLength = 24 } = {
   }
 
   return input.length > maxLength ? `${input.slice(0, maxLength)}...` : input;
-};
-
-export const parseContentSize = (value: string | number) => {
-  if (typeof value === 'number' && !Number.isNaN(value)) {
-    return value; // Already in bytes
-  }
-
-  const regex = /^(\d+(?:\.\d+)?)(\s*)(bytes|b|kb|mb|gb|tb)$/i;
-
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  const match = value.trim().match(regex);
-  if (!match) {
-    return null;
-  }
-
-  if (!match[1] || !match[3]) {
-    return null;
-  }
-
-  const number = parseFloat(match[1]);
-  const unit = match[3].toLowerCase();
-
-  return number * (unitMultipliers[unit as keyof typeof unitMultipliers] || 1);
 };
 
 export const isAbsoluteUrl = (value: unknown) => {
@@ -91,39 +51,19 @@ export const isAbsoluteUrl = (value: unknown) => {
   }
 };
 
-export const getBasePathUrl = (path: string) => {
-  const base = import.meta.env.BASE_URL || '/';
-  const normalizedBase = base === '/' ? '' : base.replace(/\/+$/, '');
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+export const getBasePathUrl = (path: string) => sharedGetBasePathUrl(path, import.meta.env.BASE_URL);
 
-  return `${normalizedBase}${normalizedPath}`;
-};
-
-export const getEntityUrl = (entity: EntityType) => {
-  const { entityType } = entity;
-  const id = encodeURIComponent(entity.id);
-  switch (entityType) {
-    case 'http://pcdm.org/models#Collection':
-      return `/collection?id=${id}`;
-    case 'http://pcdm.org/models#Object':
-      return `/object?id=${id}`;
-    case 'http://schema.org/Person':
-      return `/person?id=${id}`;
-    case 'http://schema.org/MediaObject':
-      return `/file?id=${id}`;
-    default:
-      return `/entity?id=${id}`;
-  }
-};
-
-// NOTE: This assumes the array is never empty from a type perspective
-export const first = <T>(arr: T | T[]) => {
-  if (!Array.isArray(arr)) {
-    return arr;
-  }
-
-  return arr[0] as T;
-};
+export const getEntityUrl = (entity: EntityType) =>
+  sharedGetEntityUrl(
+    entity,
+    {
+      'http://pcdm.org/models#Collection': '/collection',
+      'http://pcdm.org/models#Object': '/object',
+      'http://schema.org/Person': '/person',
+      'http://schema.org/MediaObject': '/file',
+    },
+    '/entity',
+  );
 
 export const formatDuration = (seconds: number) => {
   if (seconds < 0) {

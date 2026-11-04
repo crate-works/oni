@@ -1,7 +1,3 @@
-import { captureMessage } from '@sentry/vue';
-import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
-
 import {
   type Capabilities,
   dateFilterNames,
@@ -10,7 +6,10 @@ import {
   findUnsupportedFacets,
   parseCapabilities,
   stripUnsupportedFilters,
-} from '@/capabilities';
+} from '@researchdatabox/oni-client';
+import { captureMessage } from '@sentry/vue';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 import { type AggregationInput, ui } from '@/configuration';
 import { startCase } from '@/lib/metadata';
 import type { ApiService } from '@/services/api';

@@ -19,12 +19,9 @@ RO-Crate API.
 
 ## Quickstart
 
-Prerequisites: **Node (current LTS)** and **pnpm 12**. The easiest way to get pnpm
-is via corepack:
-
-```sh
-corepack enable
-```
+Prerequisites: **Node (current LTS)** and **pnpm 12**. Node no longer bundles
+corepack, so [install pnpm](https://pnpm.io/installation) directly; it switches
+itself to the version pinned in `package.json`.
 
 ### 1. Install dependencies
 

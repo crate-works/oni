@@ -10,3 +10,7 @@ lockfile:
 allowBuilds:
   # Installs the git hooks.
   lefthook: true
+
+permissions:
+  "@unhead/vue":
+    skills: true

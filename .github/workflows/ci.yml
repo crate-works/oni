@@ -7,11 +7,11 @@ on:
     branches: [main]
 
 jobs:
-  lint:
+  check:
     strategy:
       fail-fast: false
       matrix:
-        check: [biome, types, knip]
+        script: [lint:biome, lint:types, lint:knip, test:unit]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -30,5 +30,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint (${{ matrix.check }})
-        run: pnpm run lint:${{ matrix.check }}
+      - name: Run ${{ matrix.script }}
+        run: pnpm run ${{ matrix.script }}

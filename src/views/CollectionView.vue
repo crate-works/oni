@@ -34,6 +34,10 @@ if (!api) {
 
 const { collection: config, features } = ui;
 
+// vue-tsc 3.3.12+ mistypes the template when a static attribute contains "//"
+const pcdmCollection = 'http://pcdm.org/models#Collection';
+const pcdmObject = 'http://pcdm.org/models#Object';
+
 const id = route.query.id as string;
 
 const errorDialogText = ref('');
@@ -126,14 +130,14 @@ onMounted(fetchData);
       <el-row>
         <el-col>
           <CollectionMembers :title="t('collection.subCollections')" :id="id"
-            entityType="http://pcdm.org/models#Collection" :sort="config.memberSort" />
+            :entityType="pcdmCollection" :sort="config.memberSort" />
         </el-col>
       </el-row>
 
       <el-row>
         <el-col>
           <CollectionMembers :title="t('collection.objectsInCollection')" :id="id"
-            entityType="http://pcdm.org/models#Object" :sort="config.memberSort" />
+            :entityType="pcdmObject" :sort="config.memberSort" />
         </el-col>
       </el-row>
     </el-col>

@@ -226,8 +226,6 @@ const uiSchema = z.strictObject({
       dsn: z.url(),
       environment: z.string().optional(),
       tracesSampleRate: z.number().min(0).max(1).optional(),
-      replaysSessionSampleRate: z.number().min(0).max(1).optional(),
-      replaysOnErrorSampleRate: z.number().min(0).max(1).optional(),
     })
     .optional(),
   mapConfig: mapSchema.optional().default({ boundingBox: defaultBoundingBox, zoom: defaultZoom }),

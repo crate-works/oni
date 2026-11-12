@@ -4,10 +4,13 @@ update:
 autoDedupe: true
 saveTypes: true
 
+lockfile:
+  includeResolutionSettings: true
+
 allowBuilds:
-  "@sentry/cli": true
-  "@tailwindcss/oxide": true
-  esbuild: true
+  # Installs the git hooks.
   lefthook: true
-  oxc-resolver: true
-  vue-demi: true
+
+permissions:
+  "@unhead/vue":
+    skills: true

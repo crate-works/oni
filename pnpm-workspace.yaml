@@ -4,10 +4,19 @@ update:
 autoDedupe: true
 saveTypes: true
 
+lockfile:
+  includeResolutionSettings: true
+
 allowBuilds:
+  # Downloads the sentry-cli binary; the Sentry vite plugin uses it to upload source maps in production builds.
   "@sentry/cli": true
+  # Via @tailwindcss/vite; current releases have no install script.
   "@tailwindcss/oxide": true
+  # Not currently installed; postinstall verifies its platform binary.
   esbuild: true
+  # Installs the git hooks.
   lefthook: true
+  # Via knip; current releases have no install script.
   oxc-resolver: true
+  # Not currently installed; postinstall switches between its Vue 2 and Vue 3 builds.
   vue-demi: true

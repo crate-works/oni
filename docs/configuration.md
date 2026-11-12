@@ -712,8 +712,6 @@ Configure Sentry for error tracking and monitoring.
 | `ui.sentry.dsn` | URL | Yes | Sentry DSN (Data Source Name) |
 | `ui.sentry.environment` | string | No | Environment name (e.g., "production", "development") |
 | `ui.sentry.tracesSampleRate` | number | No | Traces sample rate (0.0 to 1.0) |
-| `ui.sentry.replaysSessionSampleRate` | number | No | Session replay sample rate (0.0 to 1.0) |
-| `ui.sentry.replaysOnErrorSampleRate` | number | No | Error replay sample rate (0.0 to 1.0) |
 
 **Example:**
 
@@ -723,9 +721,7 @@ Configure Sentry for error tracking and monitoring.
     "sentry": {
       "dsn": "https://examplePublicKey@o0.ingest.sentry.io/0",
       "environment": "production",
-      "tracesSampleRate": 0.1,
-      "replaysSessionSampleRate": 0.1,
-      "replaysOnErrorSampleRate": 1.0
+      "tracesSampleRate": 0.1
     }
   }
 }

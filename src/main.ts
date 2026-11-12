@@ -40,8 +40,6 @@ if (ui.sentry?.dsn) {
     allowUrls: [/\/assets\//],
     integrations: [Sentry.browserTracingIntegration({ router })],
     tracesSampleRate: ui.sentry.tracesSampleRate ?? 0.1,
-    replaysSessionSampleRate: ui.sentry.replaysSessionSampleRate ?? 0.1,
-    replaysOnErrorSampleRate: ui.sentry.replaysOnErrorSampleRate ?? 1.0,
   });
 }
 

@@ -35,7 +35,6 @@ if (ui.sentry?.dsn) {
   Sentry.init({
     app,
     dsn: ui.sentry.dsn,
-    sendDefaultPii: true,
     environment: ui.sentry.environment,
     // Only report errors thrown from our bundle; drops noise from injected scripts
     allowUrls: [/\/assets\//],

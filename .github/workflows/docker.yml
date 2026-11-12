@@ -9,6 +9,10 @@ on:
         description: Semver version to publish (e.g. 2.2.0)
         required: true
         type: string
+      ref:
+        description: Git ref to build (defaults to the triggering commit)
+        required: false
+        type: string
 
 env:
   GHCR_REGISTRY: ghcr.io
@@ -31,6 +35,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Prepare
         id: prepare
@@ -64,6 +70,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile
           platforms: ${{ matrix.platform }}
+          pull: true
           push: ${{ github.event_name != 'pull_request' }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=buildkit-${{ steps.prepare.outputs.pair }}

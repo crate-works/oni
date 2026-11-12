@@ -15,16 +15,13 @@ RO-Crate API.
 - **State + routing:** Pinia (with `pinia-plugin-persistedstate`), Vue Router 5
 - **API + auth:** native `fetch` (`src/services/api.ts`), `oidc-client-ts`
 - **Testing + quality:** Vitest + jsdom, Biome, Knip, vue-tsc
-- **Tooling:** pnpm 10, Node ≥22.18, lefthook, commitlint (Conventional Commits)
+- **Tooling:** pnpm 12, Node (current LTS), lefthook, commitlint (Conventional Commits)
 
 ## Quickstart
 
-Prerequisites: **Node ≥22.18** and **pnpm 10**. The easiest way to get pnpm
-is via corepack:
-
-```sh
-corepack enable
-```
+Prerequisites: **Node (current LTS)** and **pnpm 12**. Node no longer bundles
+corepack, so [install pnpm](https://pnpm.io/installation) directly; it switches
+itself to the version pinned in `package.json`.
 
 ### 1. Install dependencies
 

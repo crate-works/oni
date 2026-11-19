@@ -13,6 +13,12 @@ RUN pnpm run build
 
 FROM nginx:alpine
 
+# Oldest nginx without known security fixes outstanding
+ARG NGINX_MIN_VERSION=1.31.9
+RUN version=$(nginx -v 2>&1 | sed 's|.*nginx/||') \
+  && printf '%s\n' "$NGINX_MIN_VERSION" "$version" | sort -V -c 2>/dev/null \
+  || { echo "nginx $version is older than $NGINX_MIN_VERSION" >&2; exit 1; }
+
 EXPOSE 80
 
 RUN apk add --no-cache jq

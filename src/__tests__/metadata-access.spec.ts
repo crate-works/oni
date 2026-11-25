@@ -158,4 +158,24 @@ describe('page title', () => {
     expect(document.title).toBe('Record name');
     expect(document.head.querySelector('meta[name="DC.description"]')).toBeNull();
   });
+
+  it('loads the subcollection when navigating from its parent collection', async () => {
+    const parentId = 'arcp://name,corpus/collection/parent';
+    const childId = 'arcp://name,corpus/collection/child';
+    const pcdmCollection = 'http://pcdm.org/models#Collection';
+    globalThis.fetch = fakeApi({
+      records: {
+        [parentId]: { ...record(parentId, pcdmCollection, denied), name: 'Parent' },
+        [childId]: { ...record(childId, pcdmCollection, denied), name: 'Child' },
+      },
+    });
+    const { router, wrapper } = await mountView(CollectionView, `/collection?id=${encodeURIComponent(parentId)}`);
+    expect(document.title).toBe('Parent');
+
+    await router.push(`/collection?id=${encodeURIComponent(childId)}`);
+    await flushPromises();
+
+    expect(document.title).toBe('Child');
+    expect(wrapper.find('h5').text()).toContain('Child');
+  });
 });

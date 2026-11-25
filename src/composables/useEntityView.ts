@@ -1,5 +1,5 @@
 import type { VueHeadClient } from '@unhead/vue';
-import { ref } from 'vue';
+import { onScopeDispose, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useHead, useRecordHead } from '@/composables/head';
 import type { CollectionConfig, FileConfig, ObjectConfig } from '@/configuration';
@@ -101,7 +101,9 @@ export function useEntityView(config: CollectionConfig | ObjectConfig | FileConf
     }
   };
 
+  // Entries pushed after an await aren't tied to the component, so dispose them ourselves.
   let headEntry: { dispose: () => void } | undefined;
+  onScopeDispose(() => headEntry?.dispose());
 
   const populate = (entity: EntityType, md?: RoCrate, nameFallback?: string) => {
     if (md) {

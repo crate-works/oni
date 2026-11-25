@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue';
+import { inject, onMounted, ref, watch } from 'vue';
 import MemberTable from '@/components/MemberTable.vue';
 import { defaultPageSize, ui } from '@/configuration';
 import type { ApiService, EntityType, GetEntitiesParams } from '@/services/api';
@@ -61,6 +61,14 @@ const handlePageSizeChange = () => {
   currentPage.value = 1;
   setMembers();
 };
+
+watch(
+  () => id,
+  () => {
+    currentPage.value = 1;
+    setMembers();
+  },
+);
 
 onMounted(setMembers);
 </script>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { EntityType } from '@/services/api';
 
@@ -8,8 +9,10 @@ const { entity, routePath } = defineProps<{
   routePath: string;
 }>();
 
-const link = `/${routePath}?id=${encodeURIComponent(entity.memberOf?.id || '')}`;
-const rootLink = entity.rootCollection ? `/collection?id=${encodeURIComponent(entity.rootCollection.id)}` : '';
+const link = computed(() => `/${routePath}?id=${encodeURIComponent(entity.memberOf?.id || '')}`);
+const rootLink = computed(() =>
+  entity.rootCollection ? `/collection?id=${encodeURIComponent(entity.rootCollection.id)}` : '',
+);
 </script>
 
 <template>

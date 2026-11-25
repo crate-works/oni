@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
 import { ui } from '@/configuration';
 import type { EntityType } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -13,7 +14,7 @@ const {
   management: { editUrl },
 } = ui;
 
-const editLink = editUrl ? editUrl.replace('{id}', entity.id) : null;
+const editLink = computed(() => (editUrl ? editUrl.replace('{id}', entity.id) : null));
 </script>
 
 <template>

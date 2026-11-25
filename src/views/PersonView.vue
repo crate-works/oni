@@ -254,12 +254,7 @@ const fetchData = async () => {
   }
 };
 
-watch(
-  () => route.query.id,
-  () => {
-    fetchData();
-  },
-);
+watch(() => route.query.id, fetchData);
 
 fetchData();
 </script>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useGtm } from '@gtm-support/vue-gtm';
 import { injectHead } from '@unhead/vue';
-import { inject, onMounted, ref, watch } from 'vue';
+import { computed, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -38,7 +38,7 @@ const { collection: config, features } = ui;
 const pcdmCollection = 'http://pcdm.org/models#Collection';
 const pcdmObject = 'http://pcdm.org/models#Object';
 
-const id = route.query.id as string;
+const id = computed(() => route.query.id?.toString() ?? '');
 
 const errorDialogText = ref('');
 const errorDialogVisible = ref(false);
@@ -51,7 +51,7 @@ const entity = ref<EntityType | undefined>();
 const { name, meta, populate, handleMissingEntity } = useEntityView(config, head);
 
 const fetchData = async () => {
-  if (!id) {
+  if (!id.value) {
     handleMissingEntity();
 
     return;
@@ -60,7 +60,7 @@ const fetchData = async () => {
   isLoading.value = true;
 
   try {
-    const result = await api.getEntityWithMetadata(id);
+    const result = await api.getEntityWithMetadata(id.value);
     if ('error' in result) {
       errorDialogText.value = result.error;
       errorDialogVisible.value = true;
@@ -72,7 +72,7 @@ const fetchData = async () => {
       event: '/collection',
       category: 'collection',
       label: 'loaded-collection',
-      value: id,
+      value: id.value,
     });
 
     metadata.value = result.metadata;
@@ -97,10 +97,7 @@ const fetchData = async () => {
   );
 };
 
-watch(
-  () => route.params,
-  () => fetchData(),
-);
+watch(id, fetchData);
 
 onMounted(fetchData);
 </script>

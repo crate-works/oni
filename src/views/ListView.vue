@@ -97,8 +97,11 @@ const showMap = () => {
 };
 
 watch(
-  () => route.params,
-  () => fetchEntities(),
+  () => route.query.entityType,
+  () => {
+    currentPage.value = 1;
+    fetchEntities();
+  },
 );
 
 fetchEntities();

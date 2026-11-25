@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AccessHelper from '@/components/AccessHelper.vue';
 import FileResolve from '@/components/FileResolve.vue';
@@ -20,7 +20,7 @@ const { name, meta, populate, handleMissingEntity } = useEntityView(ui.file);
 
 type FileRoCrate = RoCrate['hasPart'][number];
 
-const id = route.query.id?.toString() as string;
+const id = computed(() => route.query.id?.toString() ?? '');
 
 const parentTitle = ref<string>();
 const parentUrl = ref<string>();
@@ -43,14 +43,18 @@ const populateData = (md: RoCrate | undefined, e: EntityType) => {
 };
 
 const getFileMetadata = async () => {
-  if (!id) {
+  if (!id.value) {
     handleMissingEntity();
 
     return;
   }
 
+  isLoading.value = true;
+  parentUrl.value = undefined;
+  annotations.value = [];
+
   try {
-    const result = await api.getEntityWithMetadata(id);
+    const result = await api.getEntityWithMetadata(id.value);
     if ('error' in result) {
       handleMissingEntity();
 
@@ -85,6 +89,8 @@ const getFileMetadata = async () => {
   }
 };
 
+watch(id, getFileMetadata);
+
 getFileMetadata();
 </script>
 
@@ -118,7 +124,7 @@ getFileMetadata();
           </el-row>
           <el-row>
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="flex justify-center h-screen overflow-auto">
-              <FileResolve :entity="entity" :metadata="metadata" :annotations="annotations" />
+              <FileResolve :key="entity.id" :entity="entity" :metadata="metadata" :annotations="annotations" />
             </el-col>
           </el-row>
         </template>

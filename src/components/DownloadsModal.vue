@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ZipLink from '@/components/ZipLink.vue';
 import { defaultPageSize, ui } from '@/configuration';
@@ -93,6 +93,14 @@ const updatePageSize = async () => {
   currentPage.value = 1;
   await getObjects();
 };
+
+watch(
+  () => id,
+  () => {
+    currentPage.value = 1;
+    getObjects();
+  },
+);
 
 getObjects();
 </script>

@@ -15,6 +15,7 @@ export type OniUser = {
   lastName?: string;
   name?: string;
   accessToken: string;
+  expiresAt?: number;
 };
 
 const clientId = api.oidc?.clientId || 'TODO';
@@ -78,6 +79,7 @@ const transformUser = (user: User): OniUser => ({
   lastName: user.profile.family_name,
   name: user.profile.name,
   accessToken: user.access_token,
+  expiresAt: user.expires_at,
 });
 
 export const initAuth = async () => {

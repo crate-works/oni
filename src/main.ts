@@ -4,7 +4,6 @@ import ElementPlus from 'element-plus';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
-import VueCookies from 'vue-cookies';
 import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/index.css';
 
@@ -61,7 +60,6 @@ if (ui.sentry?.dsn) {
 app.use(pinia);
 
 app.use(router);
-app.use(VueCookies);
 
 const api = new ApiService();
 app.provide('api', api);

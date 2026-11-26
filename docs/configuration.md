@@ -47,27 +47,27 @@ at the repo root.
 The configuration file has two main sections:
 
 - **`ui`**: User interface settings, branding, navigation, search, metadata
-      display, and features
+  display, and features
 - **`api`**: API endpoint configuration for the RO-Crate API.
 
 ## UI Configuration
 
 ### Branding and Identity
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.title` | string | Yes | Full title of the portal displayed in headers and page titles |
-| `ui.shortTitle` | string | No | Abbreviated title for compact displays |
-| `ui.logoFilename` | string | No | Filename of the logo image in the public assets directory |
-| `ui.logoLink` | string | No | External URL for the logo. If set, Home becomes a separate menu item; otherwise the logo links to `ui.topNavHome` |
-| `ui.showEllipsis` | boolean | No | Whether to show ellipsis for truncated text |
-| `ui.navHeight` | string | No | CSS height value for the navigation bar (e.g., "80px") |
+| Field             | Type    | Required | Description                                                                                                       |
+| ----------------- | ------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ui.title`        | string  | Yes      | Full title of the portal displayed in headers and page titles                                                     |
+| `ui.shortTitle`   | string  | No       | Abbreviated title for compact displays                                                                            |
+| `ui.logoFilename` | string  | No       | Filename of the logo image in the public assets directory                                                         |
+| `ui.logoLink`     | string  | No       | External URL for the logo. If set, Home becomes a separate menu item; otherwise the logo links to `ui.topNavHome` |
+| `ui.showEllipsis` | boolean | No       | Whether to show ellipsis for truncated text                                                                       |
+| `ui.navHeight`    | string  | No       | CSS height value for the navigation bar (e.g., "80px")                                                            |
 
 ### Management
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.management.editUrl` | string | No | URL template for editing content. Use `{id}` placeholder which will be replaced with the entity ID |
+| Field                   | Type   | Required | Description                                                                                        |
+| ----------------------- | ------ | -------- | -------------------------------------------------------------------------------------------------- |
+| `ui.management.editUrl` | string | No       | URL template for editing content. Use `{id}` placeholder which will be replaced with the entity ID |
 
 **Example:**
 
@@ -88,12 +88,12 @@ The configuration file has two main sections:
 
 The splash screen appears when users first visit the portal.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.splash.text` | string | Yes | Main text content for the splash screen |
-| `ui.splash.textClass` | string | Yes | CSS classes for styling the splash text |
-| `ui.splash.image` | string | Yes | Background image filename for the splash screen |
-| `ui.splash.launcher` | string | Yes | Text for the button that launches/dismisses the splash |
+| Field                 | Type   | Required | Description                                            |
+| --------------------- | ------ | -------- | ------------------------------------------------------ |
+| `ui.splash.text`      | string | Yes      | Main text content for the splash screen                |
+| `ui.splash.textClass` | string | Yes      | CSS classes for styling the splash text                |
+| `ui.splash.image`     | string | Yes      | Background image filename for the splash screen        |
+| `ui.splash.launcher`  | string | Yes      | Text for the button that launches/dismisses the splash |
 
 **Example:**
 
@@ -112,12 +112,12 @@ The splash screen appears when users first visit the portal.
 
 ### Navigation
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.topNavItems` | array | No | Navigation menu items for the top navigation bar |
-| `ui.topNavItems[].route` | string | Yes | Route path or query string for the navigation item |
-| `ui.topNavItems[].display` | string | Yes | Display text for the navigation item |
-| `ui.topNavHome` | string | No | Custom home route override |
+| Field                      | Type   | Required | Description                                        |
+| -------------------------- | ------ | -------- | -------------------------------------------------- |
+| `ui.topNavItems`           | array  | No       | Navigation menu items for the top navigation bar   |
+| `ui.topNavItems[].route`   | string | Yes      | Route path or query string for the navigation item |
+| `ui.topNavItems[].display` | string | Yes      | Display text for the navigation item               |
+| `ui.topNavHome`            | string | No       | Custom home route override                         |
 
 **Example:**
 
@@ -142,19 +142,19 @@ The splash screen appears when users first visit the portal.
 
 The following routes are available for use in navigation items:
 
-| Route | Description | Query Parameters |
-|-------|-------------|------------------|
-| `search` | Search results displayed in list format with filtering, sorting, and pagination | Standard search parameters |
-| `map` | Geographic search results displayed on an interactive map with geohash grid visualisation | Standard search parameters |
-| `list` | Browse all entities with sorting and pagination | `entityType` (optional) - Filter by RO-Crate profile URL |
-| `collection` | Display detailed information about a collection entity | `id` (required) - Collection identifier |
-| `object` | Display detailed information about an object entity | `id` (required) - Object identifier |
-| `entity` | Display detailed information about a generic entity | `id` (required) - Entity identifier |
-| `person` | Display detailed information about a person entity | `id` (required) - Person identifier |
-| `file` | Display detailed information about a file | `id` (required) - File identifier |
-| `about` | Display application information and citation text | None |
-| `terms` | Display terms and conditions | None |
-| `privacy` | Display privacy policy | None |
+| Route        | Description                                                                               | Query Parameters                                         |
+| ------------ | ----------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `search`     | Search results displayed in list format with filtering, sorting, and pagination           | Standard search parameters                               |
+| `map`        | Geographic search results displayed on an interactive map with geohash grid visualisation | Standard search parameters                               |
+| `list`       | Browse all entities with sorting and pagination                                           | `entityType` (optional) - Filter by RO-Crate profile URL |
+| `collection` | Display detailed information about a collection entity                                    | `id` (required) - Collection identifier                  |
+| `object`     | Display detailed information about an object entity                                       | `id` (required) - Object identifier                      |
+| `entity`     | Display detailed information about a generic entity                                       | `id` (required) - Entity identifier                      |
+| `person`     | Display detailed information about a person entity                                        | `id` (required) - Person identifier                      |
+| `file`       | Display detailed information about a file                                                 | `id` (required) - File identifier                        |
+| `about`      | Display application information and citation text                                         | None                                                     |
+| `terms`      | Display terms and conditions                                                              | None                                                     |
+| `privacy`    | Display privacy policy                                                                    | None                                                     |
 
 **Common Navigation Patterns:**
 
@@ -207,14 +207,14 @@ The following routes are available for use in navigation items:
 
 ### Help and Information
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.help.aboutText` | string | Yes | About text displayed in the help section (supports markdown) |
-| `ui.help.citationText` | string | Yes | Citation text for the portal |
-| `ui.subHelpLinks` | array | No | Additional help links displayed in the help section |
-| `ui.subHelpLinks[].name` | string | Yes | Display name for the help link |
-| `ui.subHelpLinks[].href` | URL | Yes | URL for the help link |
-| `ui.subHelpLinks[].target` | string | Yes | Link target (e.g., "_blank" for new tab) |
+| Field                      | Type   | Required | Description                                                  |
+| -------------------------- | ------ | -------- | ------------------------------------------------------------ |
+| `ui.help.aboutText`        | string | Yes      | About text displayed in the help section (supports markdown) |
+| `ui.help.citationText`     | string | Yes      | Citation text for the portal                                 |
+| `ui.subHelpLinks`          | array  | No       | Additional help links displayed in the help section          |
+| `ui.subHelpLinks[].name`   | string | Yes      | Display name for the help link                               |
+| `ui.subHelpLinks[].href`   | URL    | Yes      | URL for the help link                                        |
+| `ui.subHelpLinks[].target` | string | Yes      | Link target (e.g., "_blank" for new tab)                     |
 
 **Example:**
 
@@ -238,15 +238,15 @@ The following routes are available for use in navigation items:
 
 ### Terms, Privacy, and Footer
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.terms.text` | string | No | Link text for terms of service |
-| `ui.terms.href` | string | No | URL or path to terms of service |
-| `ui.terms.title` | string | No | Title attribute for terms link |
-| `ui.privacy` | object | No | Privacy notice configuration (same structure as terms) |
-| `ui.footer.copyright` | string | Yes | Copyright text for the footer |
-| `ui.footer.link.href` | URL | Yes | URL for the footer link |
-| `ui.footer.link.text` | string | Yes | Display text for the footer link |
+| Field                 | Type   | Required | Description                                            |
+| --------------------- | ------ | -------- | ------------------------------------------------------ |
+| `ui.terms.text`       | string | No       | Link text for terms of service                         |
+| `ui.terms.href`       | string | No       | URL or path to terms of service                        |
+| `ui.terms.title`      | string | No       | Title attribute for terms link                         |
+| `ui.privacy`          | object | No       | Privacy notice configuration (same structure as terms) |
+| `ui.footer.copyright` | string | Yes      | Copyright text for the footer                          |
+| `ui.footer.link.href` | URL    | Yes      | URL for the footer link                                |
+| `ui.footer.link.text` | string | Yes      | Display text for the footer link                       |
 
 **Example:**
 
@@ -276,17 +276,17 @@ The following routes are available for use in navigation items:
 
 ### Search Configuration
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.search.sorting` | array | Yes | Available sorting options |
-| `ui.search.sorting[].value` | string | Yes | Internal value for the sorting option |
-| `ui.search.sorting[].label` | string | Yes | Display label for the sorting option |
-| `ui.search.default.sorting` | string | Yes | Default sorting value (must match one of the sorting values) |
-| `ui.search.default.ordering` | "asc" \| "desc" | Yes | Default sort order |
-| `ui.search.searchDetails` | array | Yes | Fields to display in advanced search dropdown |
-| `ui.search.searchDetails[].field` | string | Yes | Field name from the data |
-| `ui.search.searchDetails[].label` | string | Yes | Display label for the field |
-| `ui.searchFields` | object | Yes | Mapping of searchable fields to display names |
+| Field                             | Type            | Required | Description                                                  |
+| --------------------------------- | --------------- | -------- | ------------------------------------------------------------ |
+| `ui.search.sorting`               | array           | Yes      | Available sorting options                                    |
+| `ui.search.sorting[].value`       | string          | Yes      | Internal value for the sorting option                        |
+| `ui.search.sorting[].label`       | string          | Yes      | Display label for the sorting option                         |
+| `ui.search.default.sorting`       | string          | Yes      | Default sorting value (must match one of the sorting values) |
+| `ui.search.default.ordering`      | "asc" \| "desc" | Yes      | Default sort order                                           |
+| `ui.search.searchDetails`         | array           | Yes      | Fields to display in advanced search dropdown                |
+| `ui.search.searchDetails[].field` | string          | Yes      | Field name from the data                                     |
+| `ui.search.searchDetails[].label` | string          | Yes      | Display label for the field                                  |
+| `ui.searchFields`                 | object          | Yes      | Mapping of searchable fields to display names                |
 
 **Example:**
 
@@ -303,9 +303,7 @@ The following routes are available for use in navigation items:
         "sorting": "relevance",
         "ordering": "desc"
       },
-      "searchDetails": [
-        { "field": "Language", "label": "Language" }
-      ]
+      "searchDetails": [{ "field": "Language", "label": "Language" }]
     },
     "searchFields": {
       "name": "Name",
@@ -319,12 +317,12 @@ The following routes are available for use in navigation items:
 
 ### Main Data Display
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.main.byteFields` | array | No | Fields that contain byte values (will be formatted as file sizes) |
-| `ui.main.durationFields` | array | No | Fields that contain duration values (will be formatted as time) |
-| `ui.main.expand` | array | Yes | Fields to automatically expand in the UI |
-| `ui.main.paginatedMeta` | array | No | Fields to paginate in metadata display (default: []) |
+| Field                    | Type  | Required | Description                                                       |
+| ------------------------ | ----- | -------- | ----------------------------------------------------------------- |
+| `ui.main.byteFields`     | array | No       | Fields that contain byte values (will be formatted as file sizes) |
+| `ui.main.durationFields` | array | No       | Fields that contain duration values (will be formatted as time)   |
+| `ui.main.expand`         | array | Yes      | Fields to automatically expand in the UI                          |
+| `ui.main.paginatedMeta`  | array | No       | Fields to paginate in metadata display (default: [])              |
 
 **Example:**
 
@@ -350,10 +348,10 @@ If `ui.metadataMapping.mappingFile` is provided, the portal will fetch the mappi
 
 The mapping file should be a valid RO-Crate (containing an `@graph` array), and each mapping entity in that graph should provide an `@id` (or `rdfs:label`) plus a `name` field. If not used, the portal will fall back to using `ui.metadataMapping.textReplacements` for display name mapping. See [ro-crate-masp](https://github.com/Language-Research-Technology/ro-crate-masp) for more information about the RO-Crate mapping format. Text replacements allow you to customise how field names are displayed throughout the interface using regular expressions.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.metadataMapping.mappingFile` | string | No | Absolute URL or public path to the RO-Crate mapping file (default: undefined) |
-| `ui.metadataMapping.textReplacements` | object | No | Regular expression patterns mapped to replacement strings (default: {}) |
+| Field                                 | Type   | Required | Description                                                                   |
+| ------------------------------------- | ------ | -------- | ----------------------------------------------------------------------------- |
+| `ui.metadataMapping.mappingFile`      | string | No       | Absolute URL or public path to the RO-Crate mapping file (default: undefined) |
+| `ui.metadataMapping.textReplacements` | object | No       | Regular expression patterns mapped to replacement strings (default: {})       |
 
 **Example:**
 
@@ -392,10 +390,7 @@ In filter mode, you specify which fields to display at the top and which to hide
     "collection": {
       "meta": {
         "mode": "filter",
-        "top": [
-          { "display": "Name", "name": "name" },
-          { "display": "Description", "name": "description" }
-        ],
+        "top": [{ "display": "Name", "name": "name" }, { "display": "Description", "name": "description" }],
         "hide": ["@type", "id", "license"]
       }
     }
@@ -437,10 +432,7 @@ In `filter` mode, you can define `top` and `hide` fields. For backward compatibi
     "file": {
       "meta": {
         "mode": "filter",
-        "top": [
-          { "display": "Name", "name": "name" },
-          { "display": "Description", "name": "description" }
-        ],
+        "top": [{ "display": "Name", "name": "name" }, { "display": "Description", "name": "description" }],
         "hide": ["@type", "id", "_access"]
       }
     }
@@ -483,12 +475,12 @@ In `explicit` mode, only fields listed in `show` are displayed.
 
 Configure Dublin Core metadata tags for SEO and discovery.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.head.title` | string | Yes | Field name to use for page title |
-| `ui.head.meta` | array | Yes | Dublin Core metadata mappings |
-| `ui.head.meta[].name` | string | Yes | Dublin Core metadata name (e.g., "DC.title") |
-| `ui.head.meta[].content` | string | Yes | Field name from data to use as content |
+| Field                    | Type   | Required | Description                                  |
+| ------------------------ | ------ | -------- | -------------------------------------------- |
+| `ui.head.title`          | string | Yes      | Field name to use for page title             |
+| `ui.head.meta`           | array  | Yes      | Dublin Core metadata mappings                |
+| `ui.head.meta[].name`    | string | Yes      | Dublin Core metadata name (e.g., "DC.title") |
+| `ui.head.meta[].content` | string | Yes      | Field name from data to use as content       |
 
 **Example:**
 
@@ -520,14 +512,14 @@ Configure aggregations only when you want to curate the facet list — rename,
 reorder or drop facets, add help text, expand a facet by default, or use a
 `date_histogram` facet.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.aggregations` | array | No | Facet definitions; omit to show every facet declared by `GET /capabilities` |
-| `ui.aggregations[].display` | string | Yes | Display name for the facet |
-| `ui.aggregations[].name` | string | Yes | Field name to aggregate on |
-| `ui.aggregations[].help` | string | No | Help text for the facet |
-| `ui.aggregations[].active` | boolean | No | Whether the facet is expanded by default when first rendered. |
-| `ui.aggregations[].type` | string | No | Aggregation type (e.g., "date_histogram" for hierarchical date facets) |
+| Field                       | Type    | Required | Description                                                                 |
+| --------------------------- | ------- | -------- | --------------------------------------------------------------------------- |
+| `ui.aggregations`           | array   | No       | Facet definitions; omit to show every facet declared by `GET /capabilities` |
+| `ui.aggregations[].display` | string  | Yes      | Display name for the facet                                                  |
+| `ui.aggregations[].name`    | string  | Yes      | Field name to aggregate on                                                  |
+| `ui.aggregations[].help`    | string  | No       | Help text for the facet                                                     |
+| `ui.aggregations[].active`  | boolean | No       | Whether the facet is expanded by default when first rendered.               |
+| `ui.aggregations[].type`    | string  | No       | Aggregation type (e.g., "date_histogram" for hierarchical date facets)      |
 
 **Facet Types:**
 
@@ -577,10 +569,10 @@ When using `type: "date_histogram"`:
 
 ### Login Configuration
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.login.enabled` | boolean | Yes | Whether login functionality is enabled |
-| `ui.login.manageTermsAndConditions` | boolean | Yes | Whether to manage terms and conditions acceptance |
+| Field                               | Type    | Required | Description                                       |
+| ----------------------------------- | ------- | -------- | ------------------------------------------------- |
+| `ui.login.enabled`                  | boolean | Yes      | Whether login functionality is enabled            |
+| `ui.login.manageTermsAndConditions` | boolean | Yes      | Whether to manage terms and conditions acceptance |
 
 **Example:**
 
@@ -599,9 +591,9 @@ When using `type: "date_histogram"`:
 
 Configure how users can request content to be taken down from the portal.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.takedown` | string | Yes | URL or mailto link for takedown requests. Use `{url}` placeholder which will be replaced with the current page URL (URL-encoded). |
+| Field         | Type   | Required | Description                                                                                                                       |
+| ------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ui.takedown` | string | Yes      | URL or mailto link for takedown requests. Use `{url}` placeholder which will be replaced with the current page URL (URL-encoded). |
 
 **URL Placeholder:**
 
@@ -631,9 +623,9 @@ The `{url}` placeholder is automatically replaced with the URL-encoded current p
 
 ### Citation Help
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.citeData.help.text` | string | Yes | Help text for citing data (supports HTML) |
+| Field                   | Type   | Required | Description                               |
+| ----------------------- | ------ | -------- | ----------------------------------------- |
+| `ui.citeData.help.text` | string | Yes      | Help text for citing data (supports HTML) |
 
 **Example:**
 
@@ -655,17 +647,17 @@ Configure the geographical map display for spatial data.
 
 `ui.mapConfig` and each of its fields are optional — when omitted, sensible defaults (covering Australia and the near Pacific) are applied. `boundingBox` sets both the initial map view and the default search area. Maps load tiles from OpenStreetMap and therefore require internet access; for offline deployments disable them with [`ui.features.disableMaps`](#features-optional).
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.mapConfig` | object | No | Map display settings; defaults applied when omitted |
-| `ui.mapConfig.boundingBox` | object | No | Bounding box for the initial view and default search area |
-| `ui.mapConfig.boundingBox.topRight` | object | Yes | Top-right corner coordinates |
-| `ui.mapConfig.boundingBox.topRight.lat` | number | Yes | Latitude |
-| `ui.mapConfig.boundingBox.topRight.lng` | number | Yes | Longitude |
-| `ui.mapConfig.boundingBox.bottomLeft` | object | Yes | Bottom-left corner coordinates |
-| `ui.mapConfig.boundingBox.bottomLeft.lat` | number | Yes | Latitude |
-| `ui.mapConfig.boundingBox.bottomLeft.lng` | number | Yes | Longitude |
-| `ui.mapConfig.zoom` | number | No | Default zoom level used to derive search geohash precision |
+| Field                                     | Type   | Required | Description                                                |
+| ----------------------------------------- | ------ | -------- | ---------------------------------------------------------- |
+| `ui.mapConfig`                            | object | No       | Map display settings; defaults applied when omitted        |
+| `ui.mapConfig.boundingBox`                | object | No       | Bounding box for the initial view and default search area  |
+| `ui.mapConfig.boundingBox.topRight`       | object | Yes      | Top-right corner coordinates                               |
+| `ui.mapConfig.boundingBox.topRight.lat`   | number | Yes      | Latitude                                                   |
+| `ui.mapConfig.boundingBox.topRight.lng`   | number | Yes      | Longitude                                                  |
+| `ui.mapConfig.boundingBox.bottomLeft`     | object | Yes      | Bottom-left corner coordinates                             |
+| `ui.mapConfig.boundingBox.bottomLeft.lat` | number | Yes      | Latitude                                                   |
+| `ui.mapConfig.boundingBox.bottomLeft.lng` | number | Yes      | Longitude                                                  |
+| `ui.mapConfig.zoom`                       | number | No       | Default zoom level used to derive search geohash precision |
 
 **Example:**
 
@@ -687,9 +679,9 @@ Configure the geographical map display for spatial data.
 
 Configure Google Analytics tracking.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.analytics.gaMeasurementId` | string | Yes | Google Analytics measurement ID |
+| Field                          | Type   | Required | Description                     |
+| ------------------------------ | ------ | -------- | ------------------------------- |
+| `ui.analytics.gaMeasurementId` | string | Yes      | Google Analytics measurement ID |
 
 **Example:**
 
@@ -707,11 +699,11 @@ Configure Google Analytics tracking.
 
 Configure Sentry for error tracking and monitoring.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.sentry.dsn` | URL | Yes | Sentry DSN (Data Source Name) |
-| `ui.sentry.environment` | string | No | Environment name (e.g., "production", "development") |
-| `ui.sentry.tracesSampleRate` | number | No | Traces sample rate (0.0 to 1.0) |
+| Field                        | Type   | Required | Description                                          |
+| ---------------------------- | ------ | -------- | ---------------------------------------------------- |
+| `ui.sentry.dsn`              | URL    | Yes      | Sentry DSN (Data Source Name)                        |
+| `ui.sentry.environment`      | string | No       | Environment name (e.g., "production", "development") |
+| `ui.sentry.tracesSampleRate` | number | No       | Traces sample rate (0.0 to 1.0)                      |
 
 **Example:**
 
@@ -731,11 +723,11 @@ Configure Sentry for error tracking and monitoring.
 
 Configure display and rendering behavior for specific views.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.presentation.errorPageImage` | boolean \| string | No | Controls the image shown on the 404 page. Set `false` to hide it, `true` to use the default image, or provide a string URL/path to use a custom image. |
-| `ui.presentation.fileVisibilityField` | string \| string[] \| boolean | No | Controls file preview visibility filtering. Set a string or string array to choose one or more metadata field names (for example, `"display"` or `["display", "photo"]`). Set `true` to use the default field (`"display"`). Set `false` to disable visibility filtering and always show files that are otherwise accessible. |
-| `ui.presentation.preferredPhotoField` | string | No | Metadata field name on Person entities used to select the preferred/main photo in PersonView. The field may contain a string path/ID, an object with `@id`, or arrays of those values. Default is `"image"`. |
+| Field                                 | Type                          | Required | Description                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------- | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui.presentation.errorPageImage`      | boolean \| string             | No       | Controls the image shown on the 404 page. Set `false` to hide it, `true` to use the default image, or provide a string URL/path to use a custom image.                                                                                                                                                                        |
+| `ui.presentation.fileVisibilityField` | string \| string[] \| boolean | No       | Controls file preview visibility filtering. Set a string or string array to choose one or more metadata field names (for example, `"display"` or `["display", "photo"]`). Set `true` to use the default field (`"display"`). Set `false` to disable visibility filtering and always show files that are otherwise accessible. |
+| `ui.presentation.preferredPhotoField` | string                        | No       | Metadata field name on Person entities used to select the preferred/main photo in PersonView. The field may contain a string path/ID, an object with `@id`, or arrays of those values. Default is `"image"`.                                                                                                                  |
 
 **Example:**
 
@@ -755,11 +747,11 @@ Configure display and rendering behavior for specific views.
 
 Enable or disable specific features.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.features.hasZipDownload` | boolean | No | Whether to enable ZIP download functionality |
-| `ui.features.hasAnnouncements` | boolean | No | Whether to fetch and display site-wide announcements (e.g. downtime warnings) on app boot. Requires the backend to implement [`GET /announcements`](./api-extensions.md#get-announcements). |
-| `ui.features.disableMaps` | boolean | No | Disable all map features (the `/map` route, the list/map view toggle, and embedded location maps). Use for offline deployments (e.g. local-network Raspberry Pis) where OpenStreetMap tiles cannot be reached. Maps are enabled by default. |
+| Field                          | Type    | Required | Description                                                                                                                                                                                                                                 |
+| ------------------------------ | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui.features.hasZipDownload`   | boolean | No       | Whether to enable ZIP download functionality                                                                                                                                                                                                |
+| `ui.features.hasAnnouncements` | boolean | No       | Whether to fetch and display site-wide announcements (e.g. downtime warnings) on app boot. Requires the backend to implement [`GET /announcements`](./api-extensions.md#get-announcements).                                                 |
+| `ui.features.disableMaps`      | boolean | No       | Disable all map features (the `/map` route, the list/map view toggle, and embedded location maps). Use for offline deployments (e.g. local-network Raspberry Pis) where OpenStreetMap tiles cannot be reached. Maps are enabled by default. |
 
 **Example:**
 
@@ -795,9 +787,9 @@ Enable or disable specific features.
 
 Configure the page size options available across all paginated views (search results, list view, object view, collection members, downloads modal, and metadata fields). The first value in the array is used as the default page size.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `ui.pagination.pageSizes` | number[] | No | Available page size options. First value is the default. (default: `[10, 25, 50, 100]`) |
+| Field                     | Type     | Required | Description                                                                             |
+| ------------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
+| `ui.pagination.pageSizes` | number[] | No       | Available page size options. First value is the default. (default: `[10, 25, 50, 100]`) |
 
 **Example:**
 
@@ -815,13 +807,15 @@ Configure the page size options available across all paginated views (search res
 
 ## API Configuration
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `api.rocrate.endpoint` | URL | Yes | Base URL of the RO-Crate API endpoint |
-| `api.rocrate.usesRedirects` | boolean | No | Whether the API uses redirects |
-| `api.oidc.endpoint` | URL | No | Base URL of the OIDC authentication endpoint |
-| `api.oidc.clientId` | string | No | OIDC client ID for authentication |
-| `api.oidc.scope` | string | No | OIDC scope |
+| Field                         | Type    | Required | Description                                                                                                               |
+| ----------------------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `api.rocrate.endpoint`        | URL     | Yes      | Base URL of the RO-Crate API endpoint                                                                                     |
+| `api.rocrate.usesRedirects`   | boolean | No       | Whether the API uses redirects                                                                                            |
+| `api.rocrate.usesTokenCookie` | boolean | No       | Whether to send the signed-in user's access token to the API's file route in a cookie (see [Token cookie](#token-cookie)) |
+| `api.rocrate.tokenCookieName` | string  | No       | Name of that cookie (default `oni_access_token`)                                                                          |
+| `api.oidc.endpoint`           | URL     | No       | Base URL of the OIDC authentication endpoint                                                                              |
+| `api.oidc.clientId`           | string  | No       | OIDC client ID for authentication                                                                                         |
+| `api.oidc.scope`              | string  | No       | OIDC scope                                                                                                                |
 
 **Example:**
 
@@ -841,6 +835,43 @@ Configure the page size options available across all paginated views (search res
 }
 ```
 
+### Token cookie
+
+When the API streams files itself rather than redirecting to presigned URLs, downloads, media and
+previews request file URLs directly, without the bearer header. Setting
+`api.rocrate.usesTokenCookie` makes Oni keep the signed-in user's access token in a cookie, so the
+browser sends it with those requests. The cookie is called `oni_access_token` unless
+`api.rocrate.tokenCookieName` says otherwise; the API must read the same name.
+
+```json
+{
+  "api": {
+    "rocrate": {
+      "endpoint": "https://catalog.example.com/api",
+      "usesTokenCookie": true
+    }
+  }
+}
+```
+
+- The cookie is host-only, `Secure` and `SameSite=Strict`, limited to `<endpoint path>/file/`, and
+  expires with the token. Oni replaces it when the token renews and deletes it on sign-out.
+- The API must accept the token from this cookie on its file route.
+- The API must be on the same origin as Oni (scheme, host and port). If only the port differs, the
+  cookie still goes with images, audio, video and downloads, but the text, EAF, PDF and CSV previews
+  use `fetch`, which doesn't send it, and get 401.
+- Browsers drop cookies over 4096 bytes, so an access token with many claims may not fit.
+- The token must be a valid cookie value. JWTs are; an opaque token containing spaces, `;`, `,`,
+  `"` or `\` is not.
+- The cookie is `Secure`, so Oni must be served over HTTPS. Chrome and Firefox make an exception
+  for `http://localhost`; other plain-HTTP origins get no cookie.
+- Each tab writes the cookie when its own session changes, so after signing out in one tab, another
+  tab that's still signed in writes it again when its token renews.
+- The cookie isn't `HttpOnly`, because Oni sets it from JavaScript. The same token is already
+  readable in `localStorage`.
+
+Leave it unset (the default) when the API is on another host or hands out presigned URLs.
+
 ## Environment Overrides
 
 Per-environment values can be set with environment variables instead of
@@ -849,14 +880,14 @@ environments. Each set variable is deep-merged over the file before the app
 loads it; unset or empty variables leave the file untouched, and any
 sections they target are created if missing.
 
-| Variable | Overrides |
-|----------|-----------|
-| `ONI_API_ENDPOINT` | `api.rocrate.endpoint` |
-| `ONI_OIDC_ENDPOINT` | `api.oidc.endpoint` |
-| `ONI_OIDC_CLIENT_ID` | `api.oidc.clientId` |
-| `ONI_SENTRY_DSN` | `ui.sentry.dsn` |
-| `ONI_SENTRY_ENVIRONMENT` | `ui.sentry.environment` |
-| `ONI_GA_MEASUREMENT_ID` | `ui.analytics.gaMeasurementId` |
+| Variable                 | Overrides                      |
+| ------------------------ | ------------------------------ |
+| `ONI_API_ENDPOINT`       | `api.rocrate.endpoint`         |
+| `ONI_OIDC_ENDPOINT`      | `api.oidc.endpoint`            |
+| `ONI_OIDC_CLIENT_ID`     | `api.oidc.clientId`            |
+| `ONI_SENTRY_DSN`         | `ui.sentry.dsn`                |
+| `ONI_SENTRY_ENVIRONMENT` | `ui.sentry.environment`        |
+| `ONI_GA_MEASUREMENT_ID`  | `ui.analytics.gaMeasurementId` |
 
 The mapping lives in [`docker/overrides.json`](../docker/overrides.json).
 

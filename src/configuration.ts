@@ -261,6 +261,11 @@ const apiSchema = z.strictObject({
   rocrate: z.strictObject({
     endpoint: z.string().optional().default('').or(z.literal('')),
     usesRedirects: z.boolean().optional(),
+    usesTokenCookie: z.boolean().optional(),
+    tokenCookieName: z
+      .string()
+      .regex(/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/, 'tokenCookieName must be a valid cookie name')
+      .default('oni_access_token'),
   }),
   oidc: z
     .strictObject({

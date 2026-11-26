@@ -1,6 +1,6 @@
 # Our config
 configuration.json
-configuration.*
+/configuration.*
 !configuration.sample.json
 
 .env

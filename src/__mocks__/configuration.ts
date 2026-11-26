@@ -12,5 +12,5 @@ export const ui: Pick<RealUi, 'aggregations'> = {
 // oidc is deliberately absent: it leaves ApiService's token and 401-retry
 // branches dormant, so specs of the API seam need no auth stubbing.
 export const api: Pick<RealApi, 'rocrate'> = {
-  rocrate: { endpoint: 'https://api.example.test' },
+  rocrate: { endpoint: 'https://api.example.test', tokenCookieName: 'oni_access_token' },
 };

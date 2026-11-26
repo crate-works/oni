@@ -819,6 +819,8 @@ Configure the page size options available across all paginated views (search res
 |-------|------|----------|-------------|
 | `api.rocrate.endpoint` | URL | Yes | Base URL of the RO-Crate API endpoint |
 | `api.rocrate.usesRedirects` | boolean | No | Whether the API uses redirects |
+| `api.rocrate.usesTokenCookie` | boolean | No | Whether to send the signed-in user's access token to the API's file route in a cookie (see [Token cookie](#token-cookie)) |
+| `api.rocrate.tokenCookieName` | string | No | Name of that cookie (default `oni_access_token`) |
 | `api.oidc.endpoint` | URL | No | Base URL of the OIDC authentication endpoint |
 | `api.oidc.clientId` | string | No | OIDC client ID for authentication |
 | `api.oidc.scope` | string | No | OIDC scope |
@@ -840,6 +842,43 @@ Configure the page size options available across all paginated views (search res
   }
 }
 ```
+
+### Token cookie
+
+When the API streams files itself rather than redirecting to presigned URLs, downloads, media and
+previews request file URLs directly, without the bearer header. Setting
+`api.rocrate.usesTokenCookie` makes Oni keep the signed-in user's access token in a cookie, so the
+browser sends it with those requests. The cookie is called `oni_access_token` unless
+`api.rocrate.tokenCookieName` says otherwise; the API must read the same name.
+
+```json
+{
+  "api": {
+    "rocrate": {
+      "endpoint": "https://catalog.example.com/api",
+      "usesTokenCookie": true
+    }
+  }
+}
+```
+
+- The cookie is host-only, `Secure` and `SameSite=Strict`, limited to `<endpoint path>/file/`, and
+  expires with the token. Oni replaces it when the token renews and deletes it on sign-out.
+- The API must accept the token from this cookie on its file route.
+- The API must be on the same origin as Oni (scheme, host and port). If only the port differs, the
+  cookie still goes with images, audio, video and downloads, but the text, EAF, PDF and CSV previews
+  use `fetch`, which doesn't send it, and get 401.
+- Browsers drop cookies over 4096 bytes, so an access token with many claims may not fit.
+- The token must be a valid cookie value. JWTs are; an opaque token containing spaces, `;`, `,`,
+  `"` or `\` is not.
+- The cookie is `Secure`, so Oni must be served over HTTPS. Chrome and Firefox make an exception
+  for `http://localhost`; other plain-HTTP origins get no cookie.
+- Each tab writes the cookie when its own session changes, so after signing out in one tab, another
+  tab that's still signed in writes it again when its token renews.
+- The cookie isn't `HttpOnly`, because Oni sets it from JavaScript. The same token is already
+  readable in `localStorage`.
+
+Leave it unset (the default) when the API is on another host or hands out presigned URLs.
 
 ## Environment Overrides
 
